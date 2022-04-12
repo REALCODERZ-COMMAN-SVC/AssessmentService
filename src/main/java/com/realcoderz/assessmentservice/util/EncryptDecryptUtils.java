@@ -27,7 +27,7 @@ public class EncryptDecryptUtils {
 
     @Value("${spring.profiles.active}")
     public void setProfiles(String active) {
-        encryptionKey = (!("prod".equals(active)) ? "DISHOOMREALCODER" : "REALCODERZ123456");
+        encryptionKey = (!("prod".equals(active)) ? "REALCODERZ123456" : "REALCODERZ123456");
     }
 
     private static final String CHARACTERENCODING = "UTF-8";

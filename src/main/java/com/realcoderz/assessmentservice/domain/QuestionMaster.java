@@ -8,6 +8,7 @@ package com.realcoderz.assessmentservice.domain;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -62,36 +63,35 @@ public class QuestionMaster extends Auditable<String> implements Serializable {
     @Column(columnDefinition = "text")
     private String codingTemplate;
 //    @NotNull(message = "No. Of Answer can't be empty")
-    
+
     private Integer no_of_answer;
-    
+
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "question_id")
     @OrderBy(value = "option_id ASC")
-    private Set<QuestionOptionMapping> options_list;
+    private List<QuestionOptionMapping> options_list;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "question_id")
     @OrderBy(value = "testCaseId ASC")
-    private Set<CodingQuestionTestCases> testCases;
-    
+    private List<CodingQuestionTestCases> testCases;
+
     @ManyToMany(mappedBy = "question_list", cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     private Set<AssessmentCreation> assessmentCreation;
-    
+
 //    @ManyToMany(mappedBy = "question_list", cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
 //    private Set<RCAssessmentCreation> rcAssessmentCreation;
-    
     @NotNull(message = "Active/Deactive can't be empty")
     private Character active;
-    
+
     private String parameterForTestCases;
-    
+
     @Column(columnDefinition = "text")
     private String expectedOutput;
     private String questionTime;
     private Long organizationId;
 
-    public QuestionMaster(Long question_id, Long language_id, Long question_type_id, String question_desc, Integer no_of_answer, Set<QuestionOptionMapping> options_list, Set<AssessmentCreation> assessmentCreation, Character active, String parameterForTestCases, String expectedOutput, Set<CodingQuestionTestCases> testCases,String questionTime) {
+    public QuestionMaster(Long question_id, Long language_id, Long question_type_id, String question_desc, Integer no_of_answer, List<QuestionOptionMapping> options_list, Set<AssessmentCreation> assessmentCreation, Character active, String parameterForTestCases, String expectedOutput, List<CodingQuestionTestCases> testCases, String questionTime) {
         this.question_id = question_id;
         this.language_id = language_id;
         this.question_type_id = question_type_id;

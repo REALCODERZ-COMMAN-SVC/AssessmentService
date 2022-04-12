@@ -5,9 +5,11 @@ import java.util.concurrent.Executor;
 import javax.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+@EnableEurekaClient
 @SpringBootApplication
 public class AssessmentServiceApplication {
 
