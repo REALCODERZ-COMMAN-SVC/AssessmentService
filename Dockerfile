@@ -3,7 +3,7 @@ FROM adoptopenjdk/openjdk11:alpine-jre
 # FROM openjdk:8
 EXPOSE 8080
 ADD target/Assessment-Service.jar assessment-service.jar
-ENTRYPOINT ["java","-jar","/rc360.jar"]
+ENTRYPOINT ["java","-jar","/assessment-service.jar"]
 
 ARG SONAR_SCANNER_HOME=/opt/sonar-scanner
 ARG SONAR_SCANNER_VERSION=4.2.0.1873-linux
