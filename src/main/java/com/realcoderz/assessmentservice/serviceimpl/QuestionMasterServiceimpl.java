@@ -579,11 +579,11 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
         difficultyMasterRepository.saveAll(difficultyMasters);
         data.forEach(a -> {
             if (!a.containsKey("language_id")) {
-                a.put("language_id", (languageMasters.parallelStream().filter(l -> l.getLanguage_name().equalsIgnoreCase(a.get("skills_desc").toString().trim())).findFirst()).get().getLanguage_id());
+                a.put("language_id", (languageMasters.stream().filter(l -> l.getLanguage_name().equalsIgnoreCase(a.get("skills_desc").toString().trim())).findFirst()).get().getLanguage_id());
             }
 
             if (!a.containsKey("difficulty_id")) {
-                a.put("difficulty_id", (difficultyMasters.parallelStream().filter(d -> d.getDifficulty_name().equalsIgnoreCase(a.get("difficulty_desc").toString().trim())).findFirst()).get().getDifficulty_id());
+                a.put("difficulty_id", (difficultyMasters.stream().filter(d -> d.getDifficulty_name().equalsIgnoreCase(a.get("difficulty_desc").toString().trim())).findFirst()).get().getDifficulty_id());
             }
             QuestionMaster questionMaster = new QuestionMaster();
             questionMaster.setLanguage_id(Long.parseLong(a.get("language_id").toString()));
@@ -595,7 +595,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
             if (a.get("question_type_id").toString().equalsIgnoreCase("1")) {
                 questionMaster.setNo_of_answer(Integer.parseInt(a.get("no_of_answer").toString()));
                 List<LinkedHashMap> list = (List<LinkedHashMap>) a.get("options_list");
-                Set<QuestionOptionMapping> options = new LinkedHashSet<>();
+                List<QuestionOptionMapping> options = new ArrayList<>();
                 list.stream().forEach(qom -> {
                     qom.keySet().stream().forEach(option -> {
                         QuestionOptionMapping questionOptionMapping = new QuestionOptionMapping();
@@ -610,7 +610,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                 questionMaster.setCodingTemplate("<pre>" + a.get("codingTemplate").toString() + "</pre>");
                 questionMaster.setExpectedOutput(a.get("expectedOutput").toString());
                 List<LinkedHashMap> list = (List<LinkedHashMap>) a.get("testCases");
-                Set<CodingQuestionTestCases> testCases = new LinkedHashSet<>();
+                List<CodingQuestionTestCases> testCases =  new ArrayList<>();
                 list.stream().forEach(li -> {
                     CodingQuestionTestCases testcase = new CodingQuestionTestCases();
                     testcase.setTestCaseName(li.get("testCaseName").toString());
