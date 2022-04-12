@@ -1,0 +1,36 @@
+spring:
+#    cloud:
+#        gcp:
+#            credentials:
+#                location: file:D:\cloud\databasekey\dishoom-6aa9763e978b.json
+#            sql:
+#                enabled: true
+#                database-type: mysql
+#                database-name: firstAssessmentProd
+#                instance-connection-name: assessment-service:asia-south1:realcoderz
+    jpa:
+        generate-ddl: true
+        hibernate.ddl-auto: update
+        show-sql: true
+        database-platform : org.hibernate.dialect.MySQL5InnoDBDialect
+        hibernate.jdbc.time_zone : IST
+    datasource :
+        initialize: true
+        driverClassName: com.mysql.cj.jdbc.Driver
+#        url: jdbc:mysql://localhost:3306/stagging
+        username: root
+#                password: Megha@00
+        password: 88723aman
+        url: jdbc:mysql://localhost:3306/newmaint 
+#        password: 88723aman
+assessment_name: RC360TEST
+assessment_code: A1B2C3D4
+organization_id: 1
+sonar_url: http://localhost:9000
+sonar_login: admin
+sonar_password: admin
+
+
+
+ 
+ 

@@ -1,0 +1,64 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.realcoderz.assessmentservice.service;
+
+import com.realcoderz.assessmentservice.domain.AssessmentCreation;
+import com.realcoderz.assessmentservice.domain.QuestionMaster;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import org.springframework.util.LinkedCaseInsensitiveMap;
+
+/**
+ *
+ * @author Prateek
+ */
+public interface AssessmentCreationService {
+
+    public void save(AssessmentCreation assessmentCreation);
+
+    public AssessmentCreation findById(Long id);
+
+    public void delete(AssessmentCreation ac);
+
+    public void update(Long id, AssessmentCreation assessmentCreation);
+
+    public List<LinkedCaseInsensitiveMap> assessments(Map map);
+
+    public Set<QuestionMaster> findQuestionsByTopicAndQuestionId(List<String> ids);
+
+    public List<LinkedCaseInsensitiveMap> getQuestionsForAssessment(Map map);
+
+    public List<AssessmentCreation> assessmentList(String assessment_desc);
+
+    public List<LinkedCaseInsensitiveMap> getUserAssessmentByUserAssessmentId(Long user_id, Long assessment_id);
+
+    public List<LinkedCaseInsensitiveMap> getTopicsForRanAssess(Map map);
+
+    public void saveRanAssess(Map map);
+
+    public Map findRanAssess(Map map);
+
+    public AssessmentCreation update(Map map);
+
+    public List<LinkedCaseInsensitiveMap> allAssessmentsList(Map<String, Object> map);
+
+    public Map verifyCode(Map map);
+
+    public Map assessmentList(Map map);
+
+    public Map add(Map map);
+
+    public String getLangName(Long language_id);
+
+    public Map getAssessmentByBatchAssociateId(Long batchId, Long userId);
+
+    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId);
+
+    public CompletableFuture<LinkedCaseInsensitiveMap> saveAssessment(Map map);
+
+}

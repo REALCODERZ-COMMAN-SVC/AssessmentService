@@ -1,0 +1,22 @@
+server:
+  use-forward-headers: true
+spring:
+    cloud:
+        gcp:
+            sql:
+                database-name: firstAssessmentProd
+                instance-connection-name: assessment-service:asia-south1:realcoderz
+    datasource :
+        username: root
+        password: Dishoom@2020
+        continue-on-error : true
+        initialization-mode : always
+    jpa:
+        generate-ddl: true
+        hibernate.ddl-auto: update
+assessment_name: RC360TEST
+assessment_code: A1B2C3D4
+
+sonar_url: http://34.121.134.137:9000/sonar
+sonar_login: admin
+sonar_password: stageuser
