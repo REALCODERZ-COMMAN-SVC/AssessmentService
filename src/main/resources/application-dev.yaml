@@ -20,10 +20,12 @@ spring:
 #        url: jdbc:mysql://localhost:3306/stagging
         username: root
 #                password: Megha@00
-        password: rootroot
-        url: jdbc:mysql://localhost:3306/assessmentmaint 
+        password: root
+        url: jdbc:mysql://localhost:3306/realcoderzstag 
 #        password: 88723aman
 
+#swagger configs
+converter_base_url: http://localhost:8083
 # Eureka Client Configuration
 eureka:
     client:

@@ -2,7 +2,7 @@ spring:
     profiles:
         active: dev
     application:
-        name: Assessnent-Service
+        name: Assessment-Service
 server:
     port : 8083
      
