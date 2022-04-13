@@ -20,6 +20,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -28,6 +29,7 @@ import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
  *
@@ -40,6 +42,9 @@ public class Converter extends AbstractHttpMessageConverter<Object> {
 
     static final Logger logger = LoggerFactory.getLogger(Converter.class);
 
+    @Value("${converter_base_url}")
+    private String api_base_url;
+    
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -62,7 +67,13 @@ public class Converter extends AbstractHttpMessageConverter<Object> {
     @Override
     protected void writeInternal(Object o, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         try {
-            outputMessage.getBody().write(encrypt(objectMapper.writeValueAsBytes(o)));
+            String url = ServletUriComponentsBuilder.fromCurrentRequest().toUriString();
+            outputMessage.getBody().write(
+                    (url.equalsIgnoreCase(api_base_url + "/swagger-resources/configuration/ui")
+                    || url.equalsIgnoreCase(api_base_url + "/swagger-resources")
+                    || url.equalsIgnoreCase(api_base_url + "/v2/api-docs")
+                    || url.equalsIgnoreCase(api_base_url + "/swagger-resources/configuration/security"))
+                    ? objectMapper.writeValueAsBytes(o) : encrypt(objectMapper.writeValueAsBytes(o)));
         } catch (Exception ex) {
             logger.error("Problem in Converter :: writeInternal() => " + ex);
         }

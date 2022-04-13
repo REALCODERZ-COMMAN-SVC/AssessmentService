@@ -738,4 +738,26 @@ public class AssessmentCreationController {
         return resultMap;
     }
 
+    @PostMapping(path = "/delete", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public Map delete(@RequestBody String data) {
+        Map resultMap = new HashMap();
+        try {
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            AssessmentCreation assessmentCreation = assessmentCreationService.findById(Long.parseLong(map.get("id").toString()));
+            assessmentCreationService.delete(assessmentCreation);
+            resultMap.put("status", "success");
+        } catch (EntiryNotFoundException ex) {
+            resultMap.clear();
+            resultMap.put("status", "error");
+            resultMap.put("msg", "Assessment not found !!");
+            logger.error("Problem in AssessmentCreationController -> delete() :: ", ex);
+        } catch (Exception ex) {
+            resultMap.clear();
+            ex.printStackTrace();
+            resultMap.put("status", "exception");
+            logger.error("Problem in AssessmentCreationController -> delete() :: ", ex);
+        }
+        return resultMap;
+    }
+
 }
