@@ -51,9 +51,6 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
 @Service
 public class AssessmentCreationServiceImpl implements AssessmentCreationService {
 
-    @Value("${organization_id}")
-    private String organizationId;
-
     @Autowired
     UserMasterRepository userMasterRepository;
 
@@ -568,7 +565,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     }
 
     @Override
-    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId) {
+    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId,Long organizationId) {
         LinkedCaseInsensitiveMap resultMap = new LinkedCaseInsensitiveMap();
         if (user_id != null && !"".equalsIgnoreCase(user_id.toString())) {
 
@@ -596,7 +593,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     quest.put("topic_Name", assessmentCreationRepository.topicNameById(Long.parseLong(que.get("language_id").toString())));
                     topics.put("topic_id", que.get("language_id"));
                     topics.put("topic_Name", assessmentCreationRepository.topicNameById(Long.parseLong(que.get("language_id").toString())));
-                    topics.put("count_no_of_question", assessmentCreationRepository.countNoOfQuestion(Long.parseLong(que.get("language_id").toString()), Long.parseLong(organizationId), Long.parseLong(assessment.get("assessment_id").toString())));
+                    topics.put("count_no_of_question", assessmentCreationRepository.countNoOfQuestion(Long.parseLong(que.get("language_id").toString()), organizationId, Long.parseLong(assessment.get("assessment_id").toString())));
                     topicList.add(topics);
 //                    List<LinkedCaseInsensitiveMap> options = new ArrayList<>();
 //                    if (que.get("options") != null) {

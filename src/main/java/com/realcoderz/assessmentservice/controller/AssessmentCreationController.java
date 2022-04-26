@@ -697,7 +697,7 @@ public class AssessmentCreationController {
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
-            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()));
+            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()),Long.parseLong(map.get("organizationId").toString()));
         } catch (IOException ex) {
             resultMap.clear();
             resultMap.put("status", "exception");

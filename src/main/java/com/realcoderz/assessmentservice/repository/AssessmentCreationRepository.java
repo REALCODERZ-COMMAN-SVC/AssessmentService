@@ -74,9 +74,8 @@ public interface AssessmentCreationRepository extends JpaRepository<AssessmentCr
     @Query(nativeQuery = true, value = "SELECT language_name as language from language_master where language_id=:language_id")
     public String getSkillsNameById(@Param("language_id") Long language_id);
 
-//    @Query("SELECT ac FROM AssessmentCreation ac INNER JOIN JobAssessmentMapping jam ON jam.jobPortalId =:jobPortalId and ac.assessment_id=jam.assessmentId  WHERE  ac.active ='Y' AND  ac.creation_type='Random' order by function('RAND')")
-//    public List<LinkedCaseInsensitiveMap> getQuizByName(@Param("jobPortalId") Long jobPortalId);
-    @Query(nativeQuery = true, value = "SELECT ac.assessment_id,ac.assessment_desc,ac.time FROM assessment_creation ac INNER JOIN job_assessment_mapping jam on  (jam.job_portal_id=:jobPortalId and jam.assessment_id=ac.assessment_id)  Where ac.active ='Y' AND ac.creation_type='Random' order by RAND()")
+//    @Query(nativeQuery = true, value = "SELECT ac.assessment_id,ac.assessment_desc,ac.time FROM assessment_creation ac INNER JOIN job_assessment_mapping jam on  (jam.job_portal_id=:jobPortalId and jam.assessment_id=ac.assessment_id)  Where ac.active ='Y' AND ac.creation_type='Random' order by RAND()")
+   @Query(nativeQuery = true , value = "SELECT ac.assessment_id,ac.assessment_desc,ac.time FROM assessment_creation ac INNER JOIN job_assessment_mapping jam on  (jam.job_portal_id=:jobPortalId and jam.assessment_id=ac.assessment_id)  Where ac.active ='Y' order by RAND()")
     public List<LinkedCaseInsensitiveMap> getQuizByName(@Param("jobPortalId") Long jobPortalId);
 
     @Query(nativeQuery = true, value = "SELECT language_name as language from language_master where language_id=:language_id")
