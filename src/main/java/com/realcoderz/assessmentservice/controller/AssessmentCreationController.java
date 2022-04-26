@@ -163,20 +163,9 @@ public class AssessmentCreationController {
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
-//            if (map.get("creation_type").toString() != null && map.get("creation_type").toString().equalsIgnoreCase("Random")) {
             resultMap.put("data", assessmentCreationService.findRanAssess(map));
             resultMap.put("status", "success");
-//            } 
-//            else
-//            
-//            {
-//                AssessmentCreation assessmentCreation = assessmentCreationService.findById(Long.parseLong(map.get("id").toString()));
-//                if (assessmentCreation != null) {
-//                    assessmentCreation.getQuestion_list().stream().forEach(q -> q.setAssessmentCreation(null));
-//                    resultMap.put("data", assessmentCreation);
-//                    resultMap.put("status", "success");
-//                }
-//            }
+
         } catch (EntiryNotFoundException ex) {
             resultMap.clear();
             resultMap.put("status", "error");

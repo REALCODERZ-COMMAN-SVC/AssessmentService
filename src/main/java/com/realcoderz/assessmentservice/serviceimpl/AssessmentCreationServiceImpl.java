@@ -87,7 +87,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         AssessmentCreation assessmentCreation = new AssessmentCreation();
         Set<QuestionMaster> questions = new HashSet();
         Set<AssessmentCreation> assessmentCreations = new HashSet<>();
-//        assessmentCreation.setLanguage_id(Long.parseLong(map.get("language_id").toString()));
+        assessmentCreation.setLanguage_id(Long.parseLong(map.get("language_id").toString()));
         assessmentCreation.setDifficulty_id(Long.parseLong(map.get("difficulty_id").toString()));
         assessmentCreation.setCodingmarks_id(Long.parseLong(map.get("codingmarks_id").toString()));
         assessmentCreation.setAssessment_desc((String) map.get("rcassessment_desc"));
@@ -102,7 +102,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(topic.get("topicId").toString()), Long.parseLong(map.get("difficulty_id").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
                     questions.addAll(assessmentCreationRepository.findByIds(ids));
                 }
-            }
+         }
         }
         assessmentCreation.setQuestion_list(questions);
         assessmentCreations.add(assessmentCreation);
@@ -291,7 +291,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
 
         Set<QuestionMaster> questions = new HashSet();
         Set<AssessmentCreation> assessmentCreations = new HashSet<>();
-//        assessmentCreation.setLanguage_id(Long.parseLong(map.get("language_id").toString()));
+        assessmentCreation.setLanguage_id(Long.parseLong(map.get("language_id").toString()));
         assessmentCreation.setDifficulty_id(Long.parseLong(map.get("difficulty_id").toString()));
         assessmentCreation.setCodingmarks_id(Long.parseLong(map.get("codingmarks_id").toString()));
         assessmentCreation.setAssessment_desc((String) map.get("rcassessment_desc"));
