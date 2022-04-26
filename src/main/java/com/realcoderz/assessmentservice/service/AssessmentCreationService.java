@@ -57,7 +57,7 @@ public interface AssessmentCreationService {
 
     public Map getAssessmentByBatchAssociateId(Long batchId, Long userId);
 
-    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId);
+    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId,Long organizationId);
 
     public CompletableFuture<LinkedCaseInsensitiveMap> saveAssessment(Map map);
 
