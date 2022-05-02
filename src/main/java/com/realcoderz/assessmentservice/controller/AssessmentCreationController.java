@@ -697,7 +697,7 @@ public class AssessmentCreationController {
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
-            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()),Long.parseLong(map.get("organizationId").toString()));
+            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()), Long.parseLong(map.get("organizationId").toString()));
         } catch (IOException ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
@@ -749,4 +749,16 @@ public class AssessmentCreationController {
         return resultMap;
     }
 
+    @PostMapping(path = "/save_ans_details")
+    public void saveAnswerDetails(@RequestBody String data) {
+        Map resultMap = new HashMap();
+        try {
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            assessmentCreationService.saveAnswerDetails(map);
+        } catch (Exception ex) {
+            resultMap.clear();
+            resultMap.put("status", "exception");
+            logger.error("Problem in AssessmentCreationController -> saveAnswerDetails() :: ", ex);
+        }
+    }
 }
