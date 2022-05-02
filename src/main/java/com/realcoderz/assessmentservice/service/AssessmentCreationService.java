@@ -61,4 +61,6 @@ public interface AssessmentCreationService {
 
     public CompletableFuture<LinkedCaseInsensitiveMap> saveAssessment(Map map);
 
+    public void saveAnswerDetails(Map map);
+
 }
