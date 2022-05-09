@@ -464,7 +464,7 @@ public class AssessmentCreationController {
         return resultMap;
     }
 //    @ApiOperation(value = "Set timer", response = TakingAssessmentControllerPayload.class)
-
+// this is when associate starts the test
     @PostMapping(path = "/settimer", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map setTimer(@RequestBody String data) {
         Map resultMap = new HashMap();
@@ -472,9 +472,12 @@ public class AssessmentCreationController {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             Long assessment_id = (map.containsKey("aid") ? Long.parseLong(map.get("aid") + "") : null);
             Long user_id = (map.containsKey("uid") ? Long.parseLong(map.get("uid") + "") : null);
-            if ((assessment_id != null) && (user_id != null)) {
+            Long orgId = (map.containsKey("orgId") ? Long.parseLong(map.get("uid").toString()) : null);
+            if ((assessment_id != null) && (user_id != null) && (orgId != null)) {
                 AssessmentCreation assessment = assessmentCreationService.findById(assessment_id);
                 if (assessment != null) {
+                    Boolean withinLimit = userAssessmentService.sendEmailWhenLimitExceed(user_id);
+                    if(withinLimit){
                     boolean assessmentSubmit = assessment.getAssessmentTimeBound().equalsIgnoreCase("assessmentTime");
                     AssociateValidate av = new AssociateValidate(user_id, assessment_id, user_id, assessmentSubmit);
                     associateValidtaeRepo.save(av);
@@ -558,10 +561,16 @@ public class AssessmentCreationController {
                             }
                         };
                         timer.schedule(task, timerInMiliSec);
+                        resultMap.put("status", "success");
                     }
+                }else{
+                    resultMap.put("status", "countExceed"); 
+                    resultMap.put("msg", "Oops!!! Something went wrong.. Please contact to administrator."); 
+                   
+                }
                 }
             }
-            resultMap.put("status", "success");
+            
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
@@ -698,14 +707,14 @@ public class AssessmentCreationController {
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             logger.info("AssessmentCreationController --> getQuiz() :: ");
-            logger.info("AssessmentCreationController --> getQuiz() :: map data" +map);
+            logger.info("AssessmentCreationController --> getQuiz() :: map data" + map);
             resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()), Long.parseLong(map.get("organizationId").toString()));
         } catch (IOException ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> getQuiz() :: ", ex);
         }
-        logger.info("Method Executed Successfully to AssessmentCreationController -> getQuiz()" +resultMap);
+        logger.info("Method Executed Successfully to AssessmentCreationController -> getQuiz()" + resultMap);
         return resultMap;
     }
 
@@ -763,5 +772,25 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> saveAnswerDetails() :: ", ex);
         }
+    }
+
+    // this api is meant to get completed assessment counts of candidate and associate both
+    @PostMapping(path = "/completedcount", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public Map getCompletedAssessmentCount(@RequestBody String data) {
+        Map resultMap = new HashMap();
+        try {
+            String orgId = mapper.readValue(EncryptDecryptUtils.decrypt(data), String.class);
+            if (orgId == null || orgId == "") {
+                resultMap.put("error", "Please provide organization id!!!");
+            } else {
+                resultMap = associateValidtaeRepo.getCompletedAssessments(Long.parseLong(orgId));
+            }
+        } catch (Exception ex) {
+            resultMap.clear();
+            ex.printStackTrace();
+            resultMap.put("status", "exception");
+            logger.error("Problem in AssessmentCreationController -> delete() :: ", ex);
+        }
+        return resultMap;
     }
 }
