@@ -23,4 +23,6 @@ public interface UserAssessmentService {
     public List<UserAssessment> getResultByUserId(Long userId);
 
     public void saveAnswerDetails(Map map);
+    
+    public boolean sendEmailWhenLimitExceed(Long orgId);
 }
