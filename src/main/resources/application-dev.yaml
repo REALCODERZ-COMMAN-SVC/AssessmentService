@@ -42,6 +42,15 @@ organization_id: 1
 sonar_url: http://localhost:9000
 sonar_login: admin
 sonar_password: admin
+spring.mail.host: smtp.gmail.com
+spring.mail.port: 587
+spring.mail.username: footsky10@gmail.com
+spring.mail.password: rmrammxbwkemkbcz
+spring.mail.tls: true
+spring.mail.properties.mail.smtp.auth: true
+spring.mail.properties.mail.smtp.starttls.enable: true
+emailFrom: footsky10@gmail.com      
+api_base_url: http://localhost:9001/recruit
 
 
 
