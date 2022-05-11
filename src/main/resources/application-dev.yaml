@@ -51,6 +51,8 @@ spring.mail.properties.mail.smtp.auth: true
 spring.mail.properties.mail.smtp.starttls.enable: true
 emailFrom: footsky10@gmail.com      
 api_base_url: http://localhost:9001/recruit
+license_url: http://localhost:9001/recruit
+assessment_url: http://localhost:9001/assessmentservice
 
 
 
