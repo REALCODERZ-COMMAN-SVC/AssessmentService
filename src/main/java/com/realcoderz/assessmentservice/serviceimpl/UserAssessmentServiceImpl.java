@@ -169,69 +169,7 @@ public class UserAssessmentServiceImpl implements UserAssessmentService {
     }
 
     @Override
-//    public boolean sendEmailWhenLimitExceed(Long orgId) {
-//        Boolean withinLimit = true;
-//        LinkedCaseInsensitiveMap json = new LinkedCaseInsensitiveMap();
-//        Map orgMap = restTemplate.postForObject(recruitURL + "/license/getAdminEmail", EncryptDecryptUtils.encrypt(orgId.toString()), LinkedCaseInsensitiveMap.class);
-//        Map map2 = associateValidateRepo.getCompletedAssessments(orgId);
-//        //Map map2 = restTemplate.postForObject(assessmentURL + "/assessments/completedcount", EncryptDecryptUtils.encrypt(orgId.toString()), LinkedCaseInsensitiveMap.class);;
-//        try {
-//            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(orgMap.get("data").toString()), Map.class);
-//
-//            if (map.isEmpty()) { // null entry will only come if no license found with the conditon in repo
-//                throw new EntiryNotFoundException("License is not active yet");
-//            }
-//
-//            Long applicant_completed_assessments = Long.parseLong(map2.get("applicant_assessment").toString());
-//            Long allowed_assessments = Long.parseLong(map2.get("allowed_assessment").toString());
-//            Long associate_completed_assessment = Long.parseLong(map2.get("associate_assessments").toString());
-//            Long total_completed_assessments = associate_completed_assessment + applicant_completed_assessments;
-//
-//            if (allowed_assessments != 0 && !map.get("type").toString().equals("HCM")) {
-//                List<Map> adminList = (List) (map.get("adminEmails"));
-//                String[] adminEmails = adminList.stream().map(e -> e.get("email").toString()).collect(Collectors.toList()).toArray(new String[adminList.size()]);
-//
-//                Long tolerance = ((total_completed_assessments + 1) * 100) / allowed_assessments;
-//                HttpHeaders header = new HttpHeaders();
-//                // header.setContentType(MediaType.APPLICATION_JSON);
-//                // header.set("Authorization", BearerTokenUtil.getBearerTokenHeader());
-//
-//                HttpEntity<String> entity = new HttpEntity(EncryptDecryptUtils.encrypt(json.toString()), header);
-//
-//                if (total_completed_assessments > Math.round((allowed_assessments * 110) / 100)) {
-//
-//                    String subject = "Limit exceed";
-//                    String text = "<html><body>dear user, You've exceeded maximum assessment limit. Please contact administrator to upgrade your package</body></html>";
-//                    new Thread(() -> adminList.forEach(u -> sendEmailNotification(adminEmails, subject, text))).start();
-//                    json.put("msg", "You've exceeded maximum assessment limit. Please contact administrator incase you want to upgrade package limit");
-//                    new Thread(() -> restTemplate.exchange(recruitURL + "/licesneNotification/add", HttpMethod.POST, entity, LinkedCaseInsensitiveMap.class).getBody()).start();
-//                    withinLimit = false;
-//                } else if (total_completed_assessments + 1 == allowed_assessments) {
-//                    String subject = "Limit exceed";
-//                    String text = "<html><body>dear user, You've reached to maximum assessment limit. Please contact administrator to upgrade your package</body></html>";
-//                    new Thread(() -> adminList.forEach(u -> sendEmailNotification(adminEmails, subject, text))).start();
-//                    json.put("msg", "You've reached to maximum assessment limit. Please contact administrator incase you want to upgrade package limit");
-//                    new Thread(() -> restTemplate.exchange(recruitURL + "/licesneNotification/add", HttpMethod.POST, entity, LinkedCaseInsensitiveMap.class).getBody()).start();
-//                    withinLimit = true;
-//                } else {
-//                    if (total_completed_assessments == Math.round(allowed_assessments / 2) || total_completed_assessments == Math.round((allowed_assessments * 3) / 4) || tolerance >= 90) {
-//                        String subject = "Alert for usage";
-//                        String text = "<html><body>dear user/n, You've reached to " + tolerance + "% of maximum assessment limit. Please contact administrator incase you want to upgrade your package</body></html>";
-//                        new Thread(() -> adminList.forEach(u -> sendEmailNotification(adminEmails, subject, text))).start();
-//                        json.put("msg", "You've used " + tolerance + "% from maximum assessment limit. Please contact administrator incase you want to upgrade package limit");
-//                        new Thread(() -> restTemplate.exchange(recruitURL + "/licesneNotification/add", HttpMethod.POST, entity, LinkedCaseInsensitiveMap.class).getBody()).start();
-//                        withinLimit = true;
-//                    }
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return withinLimit;
-//
-//    }
-
-      public boolean sendEmailWhenLimitExceed(Long orgId) {
+     public boolean sendEmailWhenLimitExceed(Long orgId) {
         Boolean withinLimit = true;
         JSONObject json = new JSONObject();
         try {
@@ -271,20 +209,20 @@ public class UserAssessmentServiceImpl implements UserAssessmentService {
                 if (total_completed_assessments > Math.round((allowed_assessments * 110) / 100)) {
 
                     String subject = "Limit exceed";
-                    String text = "<html><body>dear user, You've exceeded maximum assessment limit. Please contact administrator to upgrade your package</body></html>";
+                    String text = "You've exceeded maximum assessment conduct limit. Please contact administrator to upgrade your package";
                     new Thread(() -> adminList.forEach(u -> sendEmailNotification(adminEmails, licenseType, subject, text))).start();
                     new Thread(() -> restTemplate.exchange(recruitURL + "/licesneNotification/add", HttpMethod.POST, entity, LinkedCaseInsensitiveMap.class).getBody()).start();
                     withinLimit = false;
                 } else if (total_completed_assessments + 1 == allowed_assessments) {
                     String subject = "Limit exceed";
-                    String text = "<html><body>dear user, You've reached to maximum assessment limit. Please contact administrator to upgrade your package</body></html>";
+                    String text = "You've reached to maximum conduct assessment limit. Please contact administrator to upgrade your package";
                     new Thread(() -> adminList.forEach(u -> sendEmailNotification(adminEmails, licenseType, subject, text))).start();
                     new Thread(() -> restTemplate.exchange(recruitURL + "/licesneNotification/add", HttpMethod.POST, entity, LinkedCaseInsensitiveMap.class).getBody()).start();
                     withinLimit = true;
                 } else {
                     if (total_completed_assessments == Math.round(allowed_assessments / 2) || total_completed_assessments == Math.round((allowed_assessments * 3) / 4) || tolerance >= 90) {
                         String subject = "Alert for usage";
-                        String text = "<html><body>dear user/n, You've reached to " + tolerance + "% of maximum assessment limit. Please contact administrator incase you want to upgrade your package</body></html>";
+                        String text = "You've reached to " + tolerance + "% of maximum conduct assessment limit. Please contact administrator incase you want to upgrade your package";
                         new Thread(() -> adminList.forEach(u -> sendEmailNotification(adminEmails, licenseType, subject, text))).start();
                         new Thread(() -> restTemplate.exchange(recruitURL + "/licesneNotification/add", HttpMethod.POST, entity, LinkedCaseInsensitiveMap.class).getBody()).start();
                         withinLimit = true;
