@@ -771,6 +771,16 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         LinkedCaseInsensitiveMap result = new LinkedCaseInsensitiveMap();
         result.put("status", "success");
         Map assessmentData = (Map) map.get("assessment");
+        String status = "false";
+        String remarks = null;
+        if (map.containsKey("closeWindow") && map.get("closeWindow") != null) {
+            if (map.get("closeWindow").toString().equalsIgnoreCase("true")) {
+                status = "true";
+            }
+        }
+        if (map.containsKey("remarks") && map.get("remarks") != null) {
+            remarks = map.get("remarks").toString();
+        }
         int counter = Integer.parseInt(map.get("counter").toString());
         Long jobPortalId = Long.parseLong(map.get("jobPortalId").toString());
         Long rcAssId = Long.parseLong(assessmentData.get("assessment_id").toString());
@@ -786,7 +796,14 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             studentAssessment.setCreatedBy(map.get("user_id").toString());
             studentAssessment.setCreatedDate(new Date());
             studentAssessment.setJobPortalId(jobPortalId);
-            studentAssessment.setRemarks(counter == 4 ? "Assessment submitted automatically, as user exceeded the window switch limit." : counter != 0 ?"Tried to switch window for " + counter + " " + "times": null);
+
+            if (counter == 0 && status.equalsIgnoreCase("true")) {
+                studentAssessment.setRemarks("window close forcefully");
+            } else if (remarks != null) {
+                studentAssessment.setRemarks(remarks);
+            } else {
+                studentAssessment.setRemarks(counter == 4 ? "Assessment submitted automatically, as user exceeded the window switch limit." : "Tried to switch window for " + counter + " " + "times");
+            }
 //                assessmentDetailsRepo.updateAssessmentCompleted(Long.parseLong(map.get("user_id").toString()), assessment.getRcassessment_id());
             questWithOpt.stream().forEach(question -> {
                 Optional<LinkedHashMap> present = selectedQuestions.stream().filter(sq -> sq.get("question_id").toString().equalsIgnoreCase(question.get("question_id").toString())).findFirst();
@@ -853,47 +870,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                         logger.error("Problem in saveAssessment() :: getTopicScores does not return success");
                     }
                 }).start();
-                if (map.containsKey("organization_name") && map.get("organization_name") != null
-                        && map.containsKey("status") && map.get("status") != null && map.containsKey("email") && map.get("email") != null) {
-                    Long organizationId = organizationRepository.findIdByOrgName(map.get("organization_name").toString());
-                    CandidateStatus status = new CandidateStatus();
-                    LinkedCaseInsensitiveMap newUser = candidateStatusRepository.findByEmailAndOrganizationId(map.get("email").toString(), organizationId).get(0);
-                    if (newUser.containsKey("id") && newUser.get("id") != null
-                            && newUser.containsKey("email") && newUser.get("email") != null
-                            && newUser.containsKey("organization_name")
-                            && newUser.get("organization_name") != null && newUser.containsKey("organization_id") && newUser.get("organization_id") != null) {
-                        status.setId(Long.parseLong(newUser.get("id").toString()));
-                        status.setEmail(newUser.get("email").toString());
-                        status.setOrganizationId(Long.parseLong(newUser.get("organization_id").toString()));
-                        status.setOrganizationName(newUser.get("organization_name").toString());
-                        status.setStatus("Test Submitted");
-                        candidateStatusRepository.save(status);
-                    }
 
-                    StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
-                    stdntFdbck.setStatus("Assessment Completed");
-                    Long no_of_round = studentInterviewFeedbackRepository.getInterviewRounds(Long.parseLong(map.get("user_id").toString()));
-                    if (no_of_round == Long.parseLong("1")) {
-                        stdntFdbck.setProgress_percentage(Long.parseLong("50"));
-                    } else if (no_of_round == Long.parseLong("3")) {
-                        stdntFdbck.setProgress_percentage(Long.parseLong("20"));
-                    } else {
-                        stdntFdbck.setProgress_percentage(Long.parseLong("25"));
-
-                    }
-                    stdntFdbck.setStudent_id(Long.parseLong(map.get("user_id").toString()));
-                    stdntFdbck.setCreatedDate(new Date());
-                    stdntFdbck.setCreatedBy(map.get("user_id").toString());
-                    stdntFdbck.setLastModifiedBy(map.get("user_id").toString());
-                    stdntFdbck.setLastModifiedDate(new Date());
-                    stdntFdbck.setJob_portal_id(jobPortalId);
-                    stdntFdbck.setOrganizationId(organizationId);
-
-                    studentInterviewFeedbackRepository.save(stdntFdbck);
-
-                    //Send assessment notification
-//                    this.assessmentNotification(map);
-                }
                 //Send assessment notification
 //                this.assessmentNotification(map);
             } catch (Exception ex) {
