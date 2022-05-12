@@ -476,7 +476,7 @@ public class AssessmentCreationController {
             if ((assessment_id != null) && (user_id != null) && (orgId != null)) {
                 AssessmentCreation assessment = assessmentCreationService.findById(assessment_id);
                 if (assessment != null) {
-                    Boolean withinLimit = userAssessmentService.sendEmailWhenLimitExceed(user_id);
+                    Boolean withinLimit = userAssessmentService.sendEmailWhenLimitExceed(orgId);
                     if(withinLimit){
                     boolean assessmentSubmit = assessment.getAssessmentTimeBound().equalsIgnoreCase("assessmentTime");
                     AssociateValidate av = new AssociateValidate(user_id, assessment_id, user_id, assessmentSubmit);

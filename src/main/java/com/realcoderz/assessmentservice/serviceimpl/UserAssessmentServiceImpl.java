@@ -69,7 +69,6 @@ public class UserAssessmentServiceImpl implements UserAssessmentService {
     @Value("${api_base_url}")
     private String recruitURL;
 
-
     ObjectMapper mapper = new ObjectMapper();
 
     @Override
@@ -169,7 +168,7 @@ public class UserAssessmentServiceImpl implements UserAssessmentService {
     }
 
     @Override
-     public boolean sendEmailWhenLimitExceed(Long orgId) {
+    public boolean sendEmailWhenLimitExceed(Long orgId) {
         Boolean withinLimit = true;
         JSONObject json = new JSONObject();
         try {
@@ -179,12 +178,13 @@ public class UserAssessmentServiceImpl implements UserAssessmentService {
         }
         HttpHeaders header = new HttpHeaders();
         header.setContentType(MediaType.TEXT_PLAIN);
+        header.setContentType(MediaType.APPLICATION_JSON);
         header.set("Authorization", BearerTokenUtil.getBearerTokenHeader());
 
-        HttpEntity<String> entity2 = new HttpEntity(EncryptDecryptUtils.encrypt(orgId.toString()), header);
+        HttpEntity<String> entity2 = new HttpEntity(EncryptDecryptUtils.encrypt(json.toString()), header);
 
         Map orgMap = restTemplate.exchange(recruitURL + "/license/getAdminEmail", HttpMethod.POST, entity2, Map.class).getBody();
-     
+
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(orgMap.get("data").toString()), Map.class);
             Map map2 = associateValidateRepo.getCompletedAssessments(orgId);
@@ -209,21 +209,21 @@ public class UserAssessmentServiceImpl implements UserAssessmentService {
                 if (total_completed_assessments > Math.round((allowed_assessments * 110) / 100)) {
 
                     String subject = "Limit exceed";
-                    String text = "You've exceeded maximum assessment conduct limit. Please contact administrator to upgrade your package";
-                    new Thread(() -> adminList.forEach(u -> sendEmailNotification(adminEmails, licenseType, subject, text))).start();
+                    String text = "You've exhausted maximum assessment conduct limit. Please contact administrator to upgrade your package";
+                    new Thread(() ->  sendEmailNotification(adminEmails, licenseType, subject, text)).start();
                     new Thread(() -> restTemplate.exchange(recruitURL + "/licesneNotification/add", HttpMethod.POST, entity, LinkedCaseInsensitiveMap.class).getBody()).start();
                     withinLimit = false;
                 } else if (total_completed_assessments + 1 == allowed_assessments) {
                     String subject = "Limit exceed";
-                    String text = "You've reached to maximum conduct assessment limit. Please contact administrator to upgrade your package";
-                    new Thread(() -> adminList.forEach(u -> sendEmailNotification(adminEmails, licenseType, subject, text))).start();
+                    String text = "You've reached to maximum  assessment conduct limit. Please contact administrator to upgrade your package";
+                    new Thread(() -> sendEmailNotification(adminEmails, licenseType, subject, text)).start();
                     new Thread(() -> restTemplate.exchange(recruitURL + "/licesneNotification/add", HttpMethod.POST, entity, LinkedCaseInsensitiveMap.class).getBody()).start();
                     withinLimit = true;
                 } else {
                     if (total_completed_assessments == Math.round(allowed_assessments / 2) || total_completed_assessments == Math.round((allowed_assessments * 3) / 4) || tolerance >= 90) {
                         String subject = "Alert for usage";
                         String text = "You've reached to " + tolerance + "% of maximum conduct assessment limit. Please contact administrator incase you want to upgrade your package";
-                        new Thread(() -> adminList.forEach(u -> sendEmailNotification(adminEmails, licenseType, subject, text))).start();
+                        new Thread(() ->  sendEmailNotification(adminEmails, licenseType, subject, text)).start();
                         new Thread(() -> restTemplate.exchange(recruitURL + "/licesneNotification/add", HttpMethod.POST, entity, LinkedCaseInsensitiveMap.class).getBody()).start();
                         withinLimit = true;
                     }
@@ -236,7 +236,6 @@ public class UserAssessmentServiceImpl implements UserAssessmentService {
 
     }
 
-    
     public boolean sendEmailNotification(String[] email, String licenseType, String subject, String text) {
 
         String content = "<html>\n"
