@@ -7,6 +7,7 @@ package com.realcoderz.assessmentservice.serviceimpl;
 
 import com.realcoderz.assessmentservice.domain.AssessmentCreation;
 import com.realcoderz.assessmentservice.domain.CandidateStatus;
+import com.realcoderz.assessmentservice.domain.LanguageMaster;
 import com.realcoderz.assessmentservice.domain.QuestionMaster;
 import com.realcoderz.assessmentservice.domain.StudentAnswerTrack;
 import com.realcoderz.assessmentservice.domain.StudentAssessment;
@@ -31,6 +32,7 @@ import com.realcoderz.assessmentservice.service.AssessmentCreationService;
 import com.realcoderz.assessmentservice.service.StudentAssessmentService;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -118,7 +120,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         for (LinkedHashMap topic : topicWiseData) {
             if (topic.containsKey("selectedMCQQuestion")) {
                 if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
-                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(topic.get("topicId").toString()), Long.parseLong(map.get("difficulty_id").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
+                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
                     questions.addAll(assessmentCreationRepository.findByIds(ids));
                 }
             }
@@ -152,7 +154,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
 
     @Override
     public void delete(AssessmentCreation ac) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        assessmentCreationRepository.delete(ac);
     }
 
     @Override
@@ -227,17 +229,22 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         Long assessmentId = Long.parseLong(map.get("id").toString());
         Map<String, List<String>> returnList1 = new HashMap<>();
         List<LinkedCaseInsensitiveMap> returnList2 = new LinkedList<>();
-        List<LinkedCaseInsensitiveMap> skills = new ArrayList<>();
+        LinkedCaseInsensitiveMap skills = new LinkedCaseInsensitiveMap();
         Map returnMap = new HashMap();
 
         List<LinkedCaseInsensitiveMap> assessmentDetails = assessmentCreationRepository.assessmentDetails(assessmentId);
-//        Long language_id = Long.parseLong(assessmentDetails.get(0).get("language_id").toString());
+        Long language_id = Long.parseLong(assessmentDetails.get(0).get("language_id").toString());
+        List<Long> languages = Arrays.asList(language_id);
+        LanguageMaster language = languageMasterRepository.findById(language_id).get();
+        if (language != null) {
+            skills.put("label", language.getLanguage_name());
+            skills.put("value", language_id);
+        }
         Long difficulty_id = Long.parseLong(assessmentDetails.get(0).get("difficulty_id").toString());
         Long organizationId = Long.parseLong(assessmentDetails.get(0).get("organizationId").toString());
         List<Long> ids = assessmentCreationRepository.findQuestionIds(assessmentId);
         Map<String, LinkedCaseInsensitiveMap> skillsIdAndName = new HashMap<>();
         ids.stream().forEach(qId -> {
-
             List<LinkedCaseInsensitiveMap> list = assessmentCreationRepository.findTnameAndQCount(qId);
             if (!returnList1.containsKey(list.get(0).get("topicName") + " "
                     + list.get(0).get("questionType").toString())) {
@@ -245,31 +252,15 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 questionCount.add(list.get(0).get("topicId").toString());
                 returnList1.put(list.get(0).get("topicName").toString() + " "
                         + list.get(0).get("questionType").toString(), questionCount);
-
-//                skillsIdAndName.put(, value)
             } else {
                 returnList1.get(list.get(0).get("topicName").toString() + " "
                         + list.get(0).get("questionType").toString()).add(list.get(0).get("topicId").toString());
             }
-            if (!skillsIdAndName.containsKey(list.get(0).get("topicName"))) {
-                LinkedCaseInsensitiveMap skillIdAndName = new LinkedCaseInsensitiveMap();
-                skillIdAndName.put("label", list.get(0).get("topicName").toString());
-                skillIdAndName.put("value", Long.parseLong(list.get(0).get("topicId").toString()));
-                skillsIdAndName.put(list.get(0).get("topicName").toString(), skillIdAndName);
-            }
+
         });
         List<Long> skillsId = new ArrayList<>();
-        if (!skillsIdAndName.isEmpty()) {
-            skillsIdAndName.forEach((key, value) -> {
-                LinkedCaseInsensitiveMap selectedSkills = (LinkedCaseInsensitiveMap) value;
-                skills.add(selectedSkills);
-                if (selectedSkills.containsKey("value") && selectedSkills.get("value") != null) {
-                    Long skillId = (Long) selectedSkills.get("value");
-                    skillsId.add(skillId);
-                }
-            });
-        }
-        List<LinkedCaseInsensitiveMap> allRandomTopics = assessmentCreationRepository.getTopicsForRanAssess(skillsId, difficulty_id, organizationId);
+
+        List<LinkedCaseInsensitiveMap> allRandomTopics = assessmentCreationRepository.getTopicsForRanAssess(languages, difficulty_id, organizationId);
         allRandomTopics.stream().forEach(allTopic -> {
             final StringBuffer sb = new StringBuffer();
             LinkedCaseInsensitiveMap mp = new LinkedCaseInsensitiveMap();
@@ -321,7 +312,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         for (LinkedHashMap topic : topicWiseData) {
             if (topic.containsKey("selectedMCQQuestion")) {
                 if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
-                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(topic.get("topicId").toString()), Long.parseLong(map.get("difficulty_id").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
+                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
                     if (!ids.isEmpty() && ids.size() > 0) {
                         questions.addAll(assessmentCreationRepository.findByIds(ids));
                     } else {
