@@ -602,11 +602,11 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     quest.put("question_desc", que.get("question_desc"));
                     quest.put("codingTemplate", que.get("coding_template"));
                     quest.put("no_of_answer", que.get("no_of_answer"));
-                    quest.put("topic_id", que.get("language_id"));
-                    quest.put("topic_Name", assessmentCreationRepository.topicNameById(Long.parseLong(que.get("language_id").toString())));
-                    topics.put("topic_id", que.get("language_id"));
-                    topics.put("topic_Name", assessmentCreationRepository.topicNameById(Long.parseLong(que.get("language_id").toString())));
-                    topics.put("count_no_of_question", assessmentCreationRepository.countNoOfQuestion(Long.parseLong(que.get("language_id").toString()), organizationId, Long.parseLong(assessment.get("assessment_id").toString())));
+                    quest.put("topic_id", que.get("topic_id"));
+                    quest.put("topic_Name", assessmentCreationRepository.topicNameById(Long.parseLong(que.get("topic_id").toString())));
+                    topics.put("topic_id", que.get("topic_id"));
+                    topics.put("topic_Name", assessmentCreationRepository.topicNameById(Long.parseLong(que.get("topic_id").toString())));
+                    topics.put("count_no_of_question", assessmentCreationRepository.countNoOfQuestion(Long.parseLong(que.get("topic_id").toString()), organizationId, Long.parseLong(assessment.get("assessment_id").toString())));
                     topicList.add(topics);
 //                    List<LinkedCaseInsensitiveMap> options = new ArrayList<>();
 //                    if (que.get("options") != null) {

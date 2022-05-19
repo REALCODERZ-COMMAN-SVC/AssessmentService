@@ -10,14 +10,17 @@ import com.realcoderz.assessmentservice.domain.CodingQuestionTestCases;
 import com.realcoderz.assessmentservice.domain.DifficultyMaster;
 import com.realcoderz.assessmentservice.domain.LanguageMaster;
 import com.realcoderz.assessmentservice.domain.QuestionOptionMapping;
+import com.realcoderz.assessmentservice.domain.TopicMaster;
 import com.realcoderz.assessmentservice.repository.CodingQuestionTestCaseRepository;
 import com.realcoderz.assessmentservice.repository.DifficultyMasterRepository;
 import com.realcoderz.assessmentservice.repository.LanguageMasterRepository;
 import com.realcoderz.assessmentservice.repository.QuestionMasterRepository;
 import com.realcoderz.assessmentservice.repository.QuestionTypeRepository;
+import com.realcoderz.assessmentservice.repository.TopicMasterRepository;
 import com.realcoderz.assessmentservice.service.QuestionMasterService;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -35,7 +38,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedCaseInsensitiveMap;
@@ -65,6 +67,9 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
 
     @Autowired
     private DifficultyMasterRepository difficultyMasterRepository;
+    
+    @Autowired
+    private TopicMasterRepository topicMasterRepository;
 
     private boolean checkTemplateColumn(Map map, Long questionTypeId) {
         boolean result = false;
@@ -105,7 +110,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
         return result;
     }
 
-    @Override
+       @Override
     public Map uploadQuestions(MultipartFile file, Long organizationId, Long questionTypeId) {
         Map resultMap = new HashMap<>();
         List<Map> li = new ArrayList();
@@ -121,8 +126,11 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                             case "si.no":
                                 finalmp.put("serialIndex", cell.getColumnIndex());
                                 break;
-                            case "skills":
-                                finalmp.put("skillsIndex", cell.getColumnIndex());
+                            case "language":
+                                finalmp.put("languageIndex", cell.getColumnIndex());
+                                break;
+                            case "topic":
+                                finalmp.put("topicIndex", cell.getColumnIndex());
                                 break;
                             case "level":
                                 finalmp.put("levelIndex", cell.getColumnIndex());
@@ -154,6 +162,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                 case "technical":
                                     finalmp.put("techIndex", cell.getColumnIndex());
                                     break;
+
                             }
 
                         } else if (questionTypeId == 2) {
@@ -185,7 +194,8 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                 List<Map<String, Object>> testCases = new LinkedList<>();
                 if (isSheetEmpty(sheet)) {
                     if (checkTemplateColumn(finalmp, questionTypeId)) {
-                        List<LinkedCaseInsensitiveMap> skillsMasters = languageMasterRepository.getLanguagesForDropDown(organizationId);
+                        List<LinkedCaseInsensitiveMap> languageMasters = languageMasterRepository.getLanguagesForDropDown(organizationId);
+                        List<LinkedCaseInsensitiveMap> topicMasters = topicMasterRepository.getTopicForDropDown(organizationId);
                         List<LinkedCaseInsensitiveMap> difficultyMasters = difficultyMasterRepository.getDifficultyForDropDown(organizationId);
                         sheet.forEach((Row row) -> {
                             if (!checkIfRowIsEmpty(row)) {
@@ -236,7 +246,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                             if (!(mp.get("slno").toString().equalsIgnoreCase(String.valueOf(finalmp.get("serialIndex"))))) {
                                                 if (questionTypeId == 1) {
                                                     mp.put("options_list", new LinkedList(optionList));
-                                                    this.checkForAllFields(mp, finalmp);
+                                                    checkForAllFields(mp, finalmp);
                                                     if (!mp.containsKey("error")) {
                                                         mp.put("error", "Valid Record");
                                                     } else {
@@ -248,7 +258,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                                     mp.put("slno", String.valueOf(printCellValue(cell)));
                                                 } else if (questionTypeId == 2) {
                                                     mp.put("testCases", new LinkedList(testCases));
-                                                    this.checkForAllFields(mp, finalmp);
+                                                    checkForAllFields(mp, finalmp);
                                                     if (!mp.containsKey("error")) {
                                                         mp.put("error", "Valid Record");
                                                     } else {
@@ -266,15 +276,28 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                                 if (printCellValue(cell) != null || cell.getCellType() != Cell.CELL_TYPE_BLANK) {
                                                     mp.put("slno", printCellValue(cell));
                                                 }
-                                            } else if (cell.getColumnIndex() == finalmp.get("skillsIndex")) {
-                                                mp.put("skills_desc", printCellValue(cell));
-                                                if ((mp.get("skills_desc") == null) || (mp.get("skills_desc") != null && ("".equalsIgnoreCase(String.valueOf(mp.get("skills_desc")).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
+                                            } else if (cell.getColumnIndex() == finalmp.get("languageIndex")) {
+                                                mp.put("language_desc", printCellValue(cell));
+                                                if ((mp.get("language_desc") == null) || (mp.get("language_desc") != null && ("".equalsIgnoreCase(String.valueOf(mp.get("language_desc")).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
                                                     mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " Language is mandatory field .!");
                                                 } else {
-                                                    for (LinkedCaseInsensitiveMap language : skillsMasters) {
+                                                    for (LinkedCaseInsensitiveMap language : languageMasters) {
                                                         if (language.get("name").toString().trim().equalsIgnoreCase(String.valueOf(printCellValue(cell)).trim())) {
-                                                            mp.put("skills_desc", language.get("name").toString());
+                                                            mp.put("language_desc", language.get("name").toString());
                                                             mp.put("language_id", Long.parseLong(language.get("value").toString()));
+                                                        }
+                                                    }
+                                                }
+                                            } else if (cell.getColumnIndex() == finalmp.get("topicIndex")) {
+                                                mp.put("topic_desc", printCellValue(cell));
+                                                if ((mp.get("topic_desc") == null) || (mp.get("topic_desc") != null && ("".equalsIgnoreCase(String.valueOf(mp.get("topic_desc")).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
+                                                    mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " Topic is mandatory field .!");
+                                                    mp.put("class", "alert alert-danger");
+                                                } else {
+                                                    for (LinkedCaseInsensitiveMap topic : topicMasters) {
+                                                        if (topic.get("name").toString().trim().equalsIgnoreCase(String.valueOf(printCellValue(cell)).trim())) {
+                                                            mp.put("topic_desc", topic.get("name").toString().trim());
+                                                            mp.put("topic_id", Long.parseLong(topic.get("value").toString()));
                                                         }
                                                     }
                                                 }
@@ -390,8 +413,8 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                                 }
                                             }
                                         }
-                                        if ((questionTypeId == 1 && row.getPhysicalNumberOfCells() != 10) || (questionTypeId == 2 && row.getPhysicalNumberOfCells() != 12)) {
-                                            mp.put("error", (mp.get("error") != null ? (!String.valueOf(mp.get("error")).contains("Please fill all data!") ? String.valueOf(mp.get("error")) : "") : "") + " Please fill all data!");
+                                        if ((questionTypeId == 1 && row.getPhysicalNumberOfCells() != 11) || (questionTypeId == 2 && row.getPhysicalNumberOfCells() != 12)) {
+                                            mp.put("error", (mp.get("error") != null ? (!String.valueOf(mp.get("error")).contains("Please fill in all data.") ? String.valueOf(mp.get("error")) : "") : "") + " Please fill all data!");
                                         }
 
                                     }
@@ -544,52 +567,142 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
      * @param mp
      * @return Integer- according to DB transaction
      */
-    @Override
+//    @Override
+//    public Integer excelSave(Map mp) {
+//        Set<QuestionMaster> questionSet = new LinkedHashSet<>();
+//        List<LinkedHashMap> data = (List) mp.get("data");
+//        Set<LanguageMaster> languageMasters = new LinkedHashSet<>();
+//
+//        Set<DifficultyMaster> difficultyMasters = new LinkedHashSet<>();
+//        data.forEach(a -> {
+//            if (!a.containsKey("language_id")) {
+//                if (a.get("question_type_id").toString().equalsIgnoreCase("2")) {
+//                    languageMasters.add(new LanguageMaster(a.get("skills_desc").toString().trim(), a.get("skills_desc").toString().trim(), Long.parseLong(mp.get("organizationId").toString()), true, 'Y'));
+//
+//                } else {
+//                    languageMasters.add(new LanguageMaster(a.get("skills_desc").toString().trim(), a.get("skills_desc").toString().trim(), Long.parseLong(mp.get("organizationId").toString()), (a.containsKey("technical") && a.get("technical") != null && a.get("technical").toString().equalsIgnoreCase("y")), 'Y'));
+//
+//                }
+//            }
+//            if (a.containsKey("language_id") && a.get("language_id") != null) {
+//                if (a.get("question_type_id").toString().equalsIgnoreCase("2")) {
+//                    languageMasters.add(new LanguageMaster(Long.parseLong(a.get("language_id").toString()), a.get("skills_desc").toString(), a.get("skills_desc").toString(), Long.parseLong(mp.get("organizationId").toString()), true, 'Y'));
+//
+//                } else {
+//                    languageMasters.add(new LanguageMaster(Long.parseLong(a.get("language_id").toString()), a.get("skills_desc").toString(), a.get("skills_desc").toString(), Long.parseLong(mp.get("organizationId").toString()), (a.containsKey("technical") && a.get("technical") != null && a.get("technical").toString().equalsIgnoreCase("y")), 'Y'));
+//
+//                }
+//            }
+//            if (!a.containsKey("difficulty_id")) {
+//                difficultyMasters.add(new DifficultyMaster(a.get("difficulty_desc").toString().trim(), a.get("difficulty_desc").toString().trim(), 'Y', Long.parseLong(mp.get("organizationId").toString())));
+//            }
+//        });
+//        languageMasterRepository.saveAll(languageMasters);
+//
+//        difficultyMasterRepository.saveAll(difficultyMasters);
+//        data.forEach(a -> {
+//            if (!a.containsKey("language_id")) {
+//                a.put("language_id", (languageMasters.stream().filter(l -> l.getLanguage_name().equalsIgnoreCase(a.get("skills_desc").toString().trim())).findFirst()).get().getLanguage_id());
+//            }
+//
+//            if (!a.containsKey("difficulty_id")) {
+//                a.put("difficulty_id", (difficultyMasters.stream().filter(d -> d.getDifficulty_name().equalsIgnoreCase(a.get("difficulty_desc").toString().trim())).findFirst()).get().getDifficulty_id());
+//            }
+//            QuestionMaster questionMaster = new QuestionMaster();
+//            questionMaster.setLanguage_id(Long.parseLong(a.get("language_id").toString()));
+//            questionMaster.setDifficulty_id(Long.parseLong(a.get("difficulty_id").toString()));
+//            questionMaster.setQuestion_type_id(Long.parseLong(a.get("question_type_id").toString()));
+//            questionMaster.setQuestion_desc("<pre>" + a.get("question_desc") + "</pre>");
+//            questionMaster.setQuestionTime(a.get("questionTime").toString());
+//            questionMaster.setActive(a.get("active").toString().charAt(0));
+//            if (a.get("question_type_id").toString().equalsIgnoreCase("1")) {
+//                questionMaster.setNo_of_answer(Integer.parseInt(a.get("no_of_answer").toString()));
+//                List<LinkedHashMap> list = (List<LinkedHashMap>) a.get("options_list");
+//                List<QuestionOptionMapping> options = new ArrayList<>();
+//                list.stream().forEach(qom -> {
+//                    qom.keySet().stream().forEach(option -> {
+//                        QuestionOptionMapping questionOptionMapping = new QuestionOptionMapping();
+//                        questionOptionMapping.setOption_desc(option.toString());
+//                        questionOptionMapping.setIsActive(qom.get(option.toString()).toString().charAt(0));
+//                        questionOptionMapping.setQuestionMaster(questionMaster);
+//                        options.add(questionOptionMapping);
+//                    });
+//                });
+//                questionMaster.setOptions_list(options);
+//            } else if (a.get("question_type_id").toString().equalsIgnoreCase("2")) {
+//                questionMaster.setCodingTemplate("<pre>" + a.get("codingTemplate").toString() + "</pre>");
+//                questionMaster.setExpectedOutput(a.get("expectedOutput").toString());
+//                List<LinkedHashMap> list = (List<LinkedHashMap>) a.get("testCases");
+//                List<CodingQuestionTestCases> testCases =  new ArrayList<>();
+//                list.stream().forEach(li -> {
+//                    CodingQuestionTestCases testcase = new CodingQuestionTestCases();
+//                    testcase.setTestCaseName(li.get("testCaseName").toString());
+//                    testcase.setInput(li.get("testCaseInput").toString());
+//                    testcase.setExpectedOutput(li.get("testCaseOutput").toString());
+//                    testcase.setQuestionMaster(questionMaster);
+//                    testCases.add(testcase);
+//                });
+//                questionMaster.setTestCases(testCases);
+//            }
+//            questionMaster.setOrganizationId(Long.parseLong(mp.get("organizationId").toString()));
+//            questionSet.add(questionMaster);
+//        });
+//        questionMasterRepository.saveAll(questionSet);
+//        return questionSet.size();
+//    }
+   @Override
     public Integer excelSave(Map mp) {
-        Set<QuestionMaster> questionSet = new LinkedHashSet<>();
+        List<QuestionMaster> questionSet = new ArrayList<>();
         List<LinkedHashMap> data = (List) mp.get("data");
         Set<LanguageMaster> languageMasters = new LinkedHashSet<>();
-
+        Set<TopicMaster> topicMasters = new LinkedHashSet<>();
         Set<DifficultyMaster> difficultyMasters = new LinkedHashSet<>();
         data.forEach(a -> {
+
+            if (!a.containsKey("topic_id")) {
+                topicMasters.add(new TopicMaster(a.get("topic_desc").toString().trim(), a.get("topic_desc").toString().trim(), 'Y', Long.parseLong(mp.get("organizationId").toString())));
+            }
             if (!a.containsKey("language_id")) {
                 if (a.get("question_type_id").toString().equalsIgnoreCase("2")) {
-                    languageMasters.add(new LanguageMaster(a.get("skills_desc").toString().trim(), a.get("skills_desc").toString().trim(), Long.parseLong(mp.get("organizationId").toString()), true, 'Y'));
+                    languageMasters.add(new LanguageMaster(a.get("language_desc").toString().trim(), a.get("language_desc").toString().trim(), Long.parseLong(mp.get("organizationId").toString()), true, 'Y'));
 
                 } else {
-                    languageMasters.add(new LanguageMaster(a.get("skills_desc").toString().trim(), a.get("skills_desc").toString().trim(), Long.parseLong(mp.get("organizationId").toString()), (a.containsKey("technical") && a.get("technical") != null && a.get("technical").toString().equalsIgnoreCase("y")), 'Y'));
+                    languageMasters.add(new LanguageMaster(a.get("language_desc").toString().trim(), a.get("language_desc").toString().trim(), Long.parseLong(mp.get("organizationId").toString()), (a.containsKey("technical") && a.get("technical") != null && a.get("technical").toString().equalsIgnoreCase("y")), 'Y'));
 
                 }
             }
             if (a.containsKey("language_id") && a.get("language_id") != null) {
                 if (a.get("question_type_id").toString().equalsIgnoreCase("2")) {
-                    languageMasters.add(new LanguageMaster(Long.parseLong(a.get("language_id").toString()), a.get("skills_desc").toString(), a.get("skills_desc").toString(), Long.parseLong(mp.get("organizationId").toString()), true, 'Y'));
+                    languageMasters.add(new LanguageMaster(Long.parseLong(a.get("language_id").toString()), a.get("language_desc").toString(), a.get("language_desc").toString(), Long.parseLong(mp.get("organizationId").toString()), true, 'Y'));
 
                 } else {
-                    languageMasters.add(new LanguageMaster(Long.parseLong(a.get("language_id").toString()), a.get("skills_desc").toString(), a.get("skills_desc").toString(), Long.parseLong(mp.get("organizationId").toString()), (a.containsKey("technical") && a.get("technical") != null && a.get("technical").toString().equalsIgnoreCase("y")), 'Y'));
-
+                    languageMasters.add(new LanguageMaster(Long.parseLong(a.get("language_id").toString()), a.get("language_desc").toString(), a.get("language_desc").toString(), Long.parseLong(mp.get("organizationId").toString()), (a.containsKey("technical") && a.get("technical") != null && a.get("technical").toString().equalsIgnoreCase("y")), 'Y'));
                 }
             }
+
             if (!a.containsKey("difficulty_id")) {
                 difficultyMasters.add(new DifficultyMaster(a.get("difficulty_desc").toString().trim(), a.get("difficulty_desc").toString().trim(), 'Y', Long.parseLong(mp.get("organizationId").toString())));
             }
         });
         languageMasterRepository.saveAll(languageMasters);
-
+        topicMasterRepository.saveAll(topicMasters);
         difficultyMasterRepository.saveAll(difficultyMasters);
         data.forEach(a -> {
             if (!a.containsKey("language_id")) {
-                a.put("language_id", (languageMasters.stream().filter(l -> l.getLanguage_name().equalsIgnoreCase(a.get("skills_desc").toString().trim())).findFirst()).get().getLanguage_id());
+                a.put("language_id", (languageMasters.stream().filter(l -> l.getLanguage_name().equalsIgnoreCase(a.get("language_desc").toString().trim())).findFirst()).get().getLanguage_id());
             }
-
+            if (!a.containsKey("topic_id")) {
+                a.put("topic_id", (topicMasters.stream().filter(t -> t.getTopic_name().equalsIgnoreCase(a.get("topic_desc").toString().trim())).findFirst()).get().getTopic_id());
+            }
             if (!a.containsKey("difficulty_id")) {
                 a.put("difficulty_id", (difficultyMasters.stream().filter(d -> d.getDifficulty_name().equalsIgnoreCase(a.get("difficulty_desc").toString().trim())).findFirst()).get().getDifficulty_id());
             }
             QuestionMaster questionMaster = new QuestionMaster();
             questionMaster.setLanguage_id(Long.parseLong(a.get("language_id").toString()));
+            questionMaster.setTopic_id(Long.parseLong(a.get("topic_id").toString()));
             questionMaster.setDifficulty_id(Long.parseLong(a.get("difficulty_id").toString()));
             questionMaster.setQuestion_type_id(Long.parseLong(a.get("question_type_id").toString()));
-            questionMaster.setQuestion_desc("<pre>" + a.get("question_desc") + "</pre>");
+            questionMaster.setQuestion_desc("<pre>" + a.get("question_desc").toString().replaceAll("[^\u0000-\uffff]", "") + "</pre>");
             questionMaster.setQuestionTime(a.get("questionTime").toString());
             questionMaster.setActive(a.get("active").toString().charAt(0));
             if (a.get("question_type_id").toString().equalsIgnoreCase("1")) {
@@ -610,7 +723,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                 questionMaster.setCodingTemplate("<pre>" + a.get("codingTemplate").toString() + "</pre>");
                 questionMaster.setExpectedOutput(a.get("expectedOutput").toString());
                 List<LinkedHashMap> list = (List<LinkedHashMap>) a.get("testCases");
-                List<CodingQuestionTestCases> testCases =  new ArrayList<>();
+                List<CodingQuestionTestCases> testCases = new ArrayList<>();
                 list.stream().forEach(li -> {
                     CodingQuestionTestCases testcase = new CodingQuestionTestCases();
                     testcase.setTestCaseName(li.get("testCaseName").toString());
@@ -627,7 +740,6 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
         questionMasterRepository.saveAll(questionSet);
         return questionSet.size();
     }
-
     /**
      * To save the excel rows having only valid records
      *
