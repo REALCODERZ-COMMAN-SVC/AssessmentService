@@ -100,7 +100,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     private CandidateStatusRepository candidateStatusRepository;
 
     @Autowired
-    private OrganizationRepository organizationRepository;
+    private StudentInterviewFeedbackRepository stdntFdbckrepo;
 
     @Override
     public Map add(Map map) {
@@ -726,10 +726,22 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                                 logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex);
                             }
 
+//                            StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
+//                            stdntFdbck.setStudent_id(userId);
+//                            stdntFdbck.setStatus("Assessment Completed");
+//                            stdntFdbck.setProgress_percentage(Long.parseLong("25"));
+//                            studentInterviewFeedbackRepository.save(stdntFdbck);
                             StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
                             stdntFdbck.setStudent_id(userId);
                             stdntFdbck.setStatus("Assessment Completed");
-                            stdntFdbck.setProgress_percentage(Long.parseLong("25"));
+                            Long no_of_round = stdntFdbckrepo.getInterviewRounds(userId);
+                            if (no_of_round == Long.parseLong("1")) {
+                                stdntFdbck.setProgress_percentage(Long.parseLong("50"));
+                            } else if (no_of_round == Long.parseLong("3")) {
+                                stdntFdbck.setProgress_percentage(Long.parseLong("20"));
+                            } else {
+                                stdntFdbck.setProgress_percentage(Long.parseLong("25"));
+                            }
                             studentInterviewFeedbackRepository.save(stdntFdbck);
                         }
                         timer.cancel();
@@ -789,7 +801,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             studentAssessment.setJobPortalId(jobPortalId);
 
             if (counter == 0 && status.equalsIgnoreCase("true")) {
-                studentAssessment.setRemarks("window close forcefully");
+                studentAssessment.setRemarks("Window closed forcefully");
             } else if (remarks != null) {
                 studentAssessment.setRemarks(remarks);
             } else {
