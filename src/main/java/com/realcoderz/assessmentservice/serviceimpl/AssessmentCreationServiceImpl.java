@@ -632,6 +632,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     @Override
                     public void run() {
                         List<LinkedCaseInsensitiveMap> list = studentAssessmentRepo.getAssessmentDetailsByUserAssessmentId(userId, assessmentId);
+                        System.out.println("List" + list);
                         if ((list == null) || (list.isEmpty())) {
                             StudentAssessment assessment = new StudentAssessment();
 
@@ -667,6 +668,8 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             });
                             assessment.setDetail_list(detailList);
                             studentAssessmentRepo.save(assessment);
+                             System.out.println("List2" + list);
+
                             Map result = calculateResult(userId, assessmentId);
                             int totalMcqMarks = Integer.parseInt(result.get("totalNoOfQuestion").toString());
                             int totalMcqScore = Integer.parseInt(result.get("correctQuestion").toString());
@@ -682,6 +685,8 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             assessment.setCreatedBy(userId.toString());
                             assessment.setLastModifiedBy(userId.toString());
                             StudentAssessment stdntAss = save(assessment);
+                             System.out.println("List3" + list);
+
                             studentAnswerTrackRepository.deleteByStudentId(userId);
                             try {
                                 LinkedCaseInsensitiveMap assess = new LinkedCaseInsensitiveMap();
@@ -912,6 +917,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 ant.setStudentId(Long.parseLong(map.get("uid").toString()));
                 ant.setQuestionId(Long.parseLong(map.get("qid").toString()));
                 ant.setAnswer(Long.parseLong(map.get("answer").toString()));
+                
                 studentAnswerTrackRepository.save(ant);
             } else {
                 assAnsTrack.setAnswer(Long.parseLong(map.get("answer").toString()));
