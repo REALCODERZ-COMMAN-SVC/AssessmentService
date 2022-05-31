@@ -668,7 +668,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             });
                             assessment.setDetail_list(detailList);
                             studentAssessmentRepo.save(assessment);
-                             System.out.println("List2" + list);
+                            System.out.println("List2" + list);
 
                             Map result = calculateResult(userId, assessmentId);
                             int totalMcqMarks = Integer.parseInt(result.get("totalNoOfQuestion").toString());
@@ -685,7 +685,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             assessment.setCreatedBy(userId.toString());
                             assessment.setLastModifiedBy(userId.toString());
                             StudentAssessment stdntAss = save(assessment);
-                             System.out.println("List3" + list);
+                            System.out.println("List3" + list);
 
                             studentAnswerTrackRepository.deleteByStudentId(userId);
                             try {
@@ -826,17 +826,6 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     details.setCreatedBy(map.get("user_id").toString());
                     details.setCreatedDate(new Date());
                     detailList.add(details);
-//                        if(question.getQuestion_type_id() == 3){
-//                            AssessmentTextDetails atd = new AssessmentTextDetails();
-//                            atd.setStudentId(Long.parseLong(map.get("user_id").toString()));
-//                            atd.setAssessmentId(assessment.getRcassessment_id());
-//                            atd.setQuestionId(question.getQuestion_id());
-//                            atd.setTextAnswer((present.get()).get("template").toString());
-//                            atd.setCreatedTime(LocalDateTime.now());
-//                            assessmentDetailsRepo.save(atd);
-//                        }
-//                        if(question.getQuestion_type_id() == 4){
-//                        }
                 }
             });
             studentAssessment.setDetail_list(detailList);
@@ -853,6 +842,33 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 studentAssessment.setTotalPercentage(mcqPercentage);
             }
             StudentAssessment stAssess = save(studentAssessment);
+//Save Student Feedback           
+            StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
+            stdntFdbck.setStatus("Assessment Completed");
+            stdntFdbck.setScholarship("In Process");
+            Long no_of_round = stdntFdbckrepo.getInterviewRounds(Long.parseLong(map.get("user_id").toString()));
+            if (no_of_round == Long.parseLong("1")) {
+                stdntFdbck.setProgress_percentage(Long.parseLong("50"));
+            } else if (no_of_round == Long.parseLong("3")) {
+                stdntFdbck.setProgress_percentage(Long.parseLong("20"));
+            } else {
+                stdntFdbck.setProgress_percentage(Long.parseLong("25"));
+
+            }
+            stdntFdbck.setStudent_id(Long.parseLong(map.get("user_id").toString()));
+            stdntFdbck.setScholarship("In Process");
+            stdntFdbck.setCreatedDate(new Date());
+            stdntFdbck.setCreatedBy(map.get("user_id").toString());
+            stdntFdbck.setLastModifiedBy(map.get("user_id").toString());
+            stdntFdbck.setLastModifiedDate(new Date());
+            stdntFdbck.setJob_portal_id(jobPortalId);
+            if (map.containsKey("organization_name") && map.get("organization_name") != null) {
+                Long organizationId = stdntFdbckrepo.findOrganizationIdByName(map.get("organization_name").toString());
+                if (organizationId != null) {
+                    stdntFdbck.setOrganizationId(organizationId);
+                }
+            }
+            stdntFdbckrepo.save(stdntFdbck);
             //save topic wise scores
             try {
                 LinkedCaseInsensitiveMap assess = new LinkedCaseInsensitiveMap();
@@ -917,7 +933,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 ant.setStudentId(Long.parseLong(map.get("uid").toString()));
                 ant.setQuestionId(Long.parseLong(map.get("qid").toString()));
                 ant.setAnswer(Long.parseLong(map.get("answer").toString()));
-                
+
                 studentAnswerTrackRepository.save(ant);
             } else {
                 assAnsTrack.setAnswer(Long.parseLong(map.get("answer").toString()));

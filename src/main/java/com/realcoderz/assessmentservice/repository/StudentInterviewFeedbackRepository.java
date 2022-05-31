@@ -21,4 +21,7 @@ public interface StudentInterviewFeedbackRepository extends JpaRepository<Studen
     @Query(nativeQuery = true, value = "Select interviews from student_master sm INNER JOIN job_portal jp on jp.job_portal_id=sm.job_portal_id WHERE sm.student_id=:student_id")
     public Long getInterviewRounds(@Param("student_id") Long student_id);
 
+    @Query(value = "SELECT organizationId FROM Organization WHERE lower(organizationName)=lower(:organizationName)")
+    public Long findOrganizationIdByName(@Param("organizationName") String organizationName);
+
 }
