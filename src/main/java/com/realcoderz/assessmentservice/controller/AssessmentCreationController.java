@@ -726,7 +726,7 @@ public class AssessmentCreationController {
             map.put("accessToken", request.getHeader("Authorization"));
             Map assessmentData = ((map.containsKey("assessment") && map.get("assessment") != null) ? (Map) map.get("assessment") : null);
             if (assessmentData != null) {
-                resultMap.put("status", "success");
+                resultMap.put("status","success");
                 assessmentCreationService.saveAssessment(map);
 
             } else {
