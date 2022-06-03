@@ -120,7 +120,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         for (LinkedHashMap topic : topicWiseData) {
             if (topic.containsKey("selectedMCQQuestion")) {
                 if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
-                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
+                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(map.get("language_id").toString()),Long.parseLong(map.get("difficulty_id").toString()),Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
                     questions.addAll(assessmentCreationRepository.findByIds(ids));
                 }
             }
@@ -312,7 +312,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         for (LinkedHashMap topic : topicWiseData) {
             if (topic.containsKey("selectedMCQQuestion")) {
                 if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
-                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
+                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(map.get("language_id").toString()),Long.parseLong(map.get("difficulty_id").toString()),Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
                     if (!ids.isEmpty() && ids.size() > 0) {
                         questions.addAll(assessmentCreationRepository.findByIds(ids));
                     } else {
