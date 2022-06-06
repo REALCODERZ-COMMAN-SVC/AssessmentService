@@ -5,6 +5,7 @@
  */
 package com.realcoderz.assessmentservice.domain;
 
+import com.realcoderz.assessmentservice.auditable.Auditable;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -24,7 +25,7 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 public class AssociateTopicScores extends Auditable<String> implements Serializable {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -37,13 +38,11 @@ public class AssociateTopicScores extends Auditable<String> implements Serializa
     @Column(name = "score", length = 5)
     private float score;
 
-    public AssociateTopicScores(long user_id,long assessment_id, String topic_name, float score) {
+    public AssociateTopicScores(long user_id, long assessment_id, String topic_name, float score) {
         this.user_id = user_id;
         this.assessment_id = assessment_id;
         this.topic_name = topic_name;
         this.score = score;
     }
-    
-    
-    
+
 }

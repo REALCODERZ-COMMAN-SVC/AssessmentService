@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import com.realcoderz.assessmentservice.auditable.Auditable;
 
 /**
  *
@@ -77,14 +78,14 @@ public class AssessmentCreation extends Auditable<String> implements Serializabl
     @JoinTable(name = "assessment_question", joinColumns = @JoinColumn(name = "assessment_id"), inverseJoinColumns = @JoinColumn(name = "question_id"))
     @OrderBy(value = "question_id ASC")
     private Set<QuestionMaster> question_list;
-    
+
     private String assessmentTimeBound;
 
     @NotNull(message = "Active/Deactive can't be empty")
     private Character active;
     private Long organizationId;
 
-    public AssessmentCreation(Long assessment_id, String assessment_desc, Long event_id,String instructions, Long language_id,Long difficulty_id, Integer time, Set<QuestionMaster> question_list, Character active,String assessmentTimeBound) {
+    public AssessmentCreation(Long assessment_id, String assessment_desc, Long event_id, String instructions, Long language_id, Long difficulty_id, Integer time, Set<QuestionMaster> question_list, Character active, String assessmentTimeBound) {
         this.assessment_id = assessment_id;
         this.assessment_desc = assessment_desc;
         this.event_id = event_id;
