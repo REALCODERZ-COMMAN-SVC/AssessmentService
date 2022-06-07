@@ -14,6 +14,7 @@ import javax.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.realcoderz.assessmentservice.auditable.Auditable;
 
 /**
  *
