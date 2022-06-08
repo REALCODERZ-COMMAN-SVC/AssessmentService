@@ -781,11 +781,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         Map assessmentData = (Map) map.get("assessment");
         String status = "false";
         String remarks = null;
-        if (map.containsKey("closeWindow") && map.get("closeWindow") != null) {
-            if (map.get("closeWindow").toString().equalsIgnoreCase("true")) {
-                status = "true";
-            }
-        }
+
         if (map.containsKey("remarks") && map.get("remarks") != null) {
             remarks = map.get("remarks").toString();
         }
@@ -805,9 +801,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             studentAssessment.setCreatedDate(new Date());
             studentAssessment.setJobPortalId(jobPortalId);
 
-            if (counter == 0 && status.equalsIgnoreCase("true")) {
-                studentAssessment.setRemarks("Window closed forcefully");
-            } else if (remarks != null) {
+            if (remarks != null) {
                 studentAssessment.setRemarks(remarks);
             } else {
                 studentAssessment.setRemarks(counter == 4 ? "Assessment submitted automatically, as user exceeded the window switch limit." : "Tried to switch window for " + counter + " " + "times");
