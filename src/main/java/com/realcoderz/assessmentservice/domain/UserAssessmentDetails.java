@@ -16,7 +16,7 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import com.realcoderz.assessmentservice.auditable.Auditable;
-
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -26,6 +26,7 @@ import com.realcoderz.assessmentservice.auditable.Auditable;
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class UserAssessmentDetails extends Auditable<String> implements Serializable {
 
     @Id
@@ -44,6 +45,7 @@ public class UserAssessmentDetails extends Auditable<String> implements Serializ
     private Long question_id;
     private String answer;
     @ManyToOne
+    @EqualsAndHashCode.Exclude
     private UserAssessment userAssessment;
 
 }

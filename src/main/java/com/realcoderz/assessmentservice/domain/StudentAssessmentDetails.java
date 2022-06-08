@@ -17,23 +17,23 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class StudentAssessmentDetails extends Auditable<String> implements Serializable {
-    
+
     @Id
     @GeneratedValue(generator = "student_assessment_details_generator")
     @GenericGenerator(
             name = "student_assessment_details_generator",
             strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
             parameters = {
-                @Parameter(name = "sequence_name", value = "student_assessment_details_sequence")
-                ,
-                @Parameter(name = "initial_value", value = "1")
-                ,
+                @Parameter(name = "sequence_name", value = "student_assessment_details_sequence"),
+                @Parameter(name = "initial_value", value = "1"),
                 @Parameter(name = "increment_size", value = "1")
             }
     )
@@ -42,6 +42,7 @@ public class StudentAssessmentDetails extends Auditable<String> implements Seria
     private Long question_id;
     private String answer;
     @ManyToOne
+    @EqualsAndHashCode.Exclude
     private StudentAssessment studentAssessment;
 
     public StudentAssessmentDetails(Long student_assessment_details_id, Long question_id, String answer, StudentAssessment studentAssessment) {
