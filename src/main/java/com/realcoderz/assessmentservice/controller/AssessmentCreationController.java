@@ -113,9 +113,11 @@ public class AssessmentCreationController {
 
     @PostMapping
     public Map list(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> list() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> list() :: Method started successfully with request data : " + map);
             resultMap.put("list", assessmentCreationService.assessments(map));
             resultMap.put("status", "success");
         } catch (Exception ex) {
@@ -123,46 +125,57 @@ public class AssessmentCreationController {
             resultMap.put("status", "error");
             logger.error("Problem in AssessmentCreationController -> list() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> list() :: Method completed successfully. With response date : " + resultMap);
         return resultMap;
     }
 
     @PostMapping(path = "/add", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     @ApiOperation(value = "Save assessment details", notes = "THIS METHOD IS USE TO SAVE ASSESSMENT DETAILS", response = AssessmentCreationControllerPayload.class)
     public Map add(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> add() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> add() :: Method started successfully with request data : " + map);
             resultMap = assessmentCreationService.add(map);
         } catch (Exception objException) {
             resultMap.clear();
             resultMap.put("status", objException);
-            logger.error("Problem in AssessmentCreationController -> add() :: ", objException);
+            logger.error("Problem in AssessmentCreationController -> add() :: ", objException.getMessage());
         }
+        logger.info("AssessmentCreationController -> add() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "All assessment list", response = AssessmentCreationControllerPayload.class)
     @PostMapping(path = "/all", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map allAssessmentList(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> allAssessmentList() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> allAssessmentList() :: Method started successfully with request data :" + map);
             resultMap.put("list", assessmentCreationService.allAssessmentsList(map));
             resultMap.put("status", "success");
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "error");
-            logger.error("Problem in AssessmentCreationController -> allAssessmentList() :: ", ex);
+            logger.error("Problem in AssessmentCreationController -> allAssessmentList() :: ", ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> allAssessmentList() :: Method completed successfully with response date : " + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "Get by ID", response = RCAssessmentCreationControllerPayload.class)
     @PostMapping(path = "/get", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map getById(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> getById() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> getById() :: Method started successfully with request data : " + map);
             resultMap.put("data", assessmentCreationService.findRanAssess(map));
             resultMap.put("status", "success");
 
@@ -170,38 +183,47 @@ public class AssessmentCreationController {
             resultMap.clear();
             resultMap.put("status", "error");
             resultMap.put("msg", "Assessment not found !!");
-            logger.error("Problem in AssessmentCreationController -> getById() :: ", ex);
+            logger.error("Problem in AssessmentCreationController -> getById() :: ", ex.getMessage());
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
-            logger.error("Problem in AssessmentCreationController -> getById() :: ", ex);
+            logger.error("Problem in AssessmentCreationController -> getById() :: ", ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> getById() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "Get topic for random assessment", response = RCAssessmentCreationControllerPayload.class)
     @PostMapping(path = "/getTopicsForRanAssess", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map getTopicsForAssessment(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> getTopicsForAssessment() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> getTopicsForAssessment() :: Method started successfully.");
             resultMap.put("list", assessmentCreationService.getTopicsForRanAssess(map));
+            logger.info("AssessmentCreationController -> getTopicsForAssessment() :: Method started successfully with requested data " + map);
             resultMap.put("status", "success");
         } catch (Exception ex) {
             ex.printStackTrace();
             resultMap.clear();
             resultMap.put("status", "exception");
-            logger.error("Problem in AssessmentCreationController -> getTopicsForRanAssess() :: " + ex);
+            logger.error("Problem in AssessmentCreationController -> getTopicsForRanAssess() :: " + ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> getTopicsForRanAssess() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "Save Random Assessment", response = RCAssessmentCreationControllerPayload.class)
     @PostMapping(path = "/update", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map update(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> update() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> update() :: Method started successfully with request data ::" + map);
             AssessmentCreation saveUpd = assessmentCreationService.update(map);
             if (saveUpd != null) {
                 resultMap.put("status", "success");
@@ -212,14 +234,17 @@ public class AssessmentCreationController {
             resultMap.clear();
             ex.printStackTrace();
             resultMap.put("status", "exception");
-            logger.error("Problem in AssessmentCreationController -> update() :: " + ex);
+            logger.error("Problem in AssessmentCreationController -> update() :: " + ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> update() :: Method completed successfully with response date : " + resultMap);
+
         return resultMap;
     }
 
 //    @ApiOperation(value = "Get assessment", response = TakingAssessmentControllerPayload.class)
     @PostMapping(path = "/assessment", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map getAssessment(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> list() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -263,6 +288,8 @@ public class AssessmentCreationController {
                 if (count.get(0).getAssessmentSubmit()) {
                     resultMap.put("msg", "Assessment already attempted!");
                     resultMap.put("status", "error");
+                    logger.info("AssessmentCreationController -> getAssessment() :: Assessment already attempted!: ");
+
                 } else {
                     resultMap = resumeTest(assessment, Long.parseLong(map.get("uid").toString()));
                 }
@@ -273,8 +300,10 @@ public class AssessmentCreationController {
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
-            logger.error("Problem in AssessmentCreationController -> getAssessment() :: ", ex);
+            logger.error("Problem in AssessmentCreationController -> getAssessment() :: ", ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> getAssessment() :: Method completed successfully with response date : " + resultMap);
+
         return resultMap;
     }
 
@@ -451,9 +480,11 @@ public class AssessmentCreationController {
 //            response = DashboardControllerPayload.class)
     public Map getAssessmentForAssociates(@RequestBody String data
     ) {
+        logger.info("AssessmentCreationController -> getAssessmentForAssociates() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> getAssessmentForAssociates() :: Method started successfully with ");
             List<LinkedCaseInsensitiveMap> batchList = batchMasterService.getBatchForAssociates(map);
             if (batchList != null && batchList.size() > 0) {
                 batchList.stream().forEach(batch -> {
@@ -472,6 +503,8 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> getAssessmentForAssociates() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> getAssessmentForAssociates() :: Method completed successfully with response date : " + resultMap);
+
         return resultMap;
     }
 //    @ApiOperation(value = "Set timer", response = TakingAssessmentControllerPayload.class)
@@ -480,6 +513,7 @@ public class AssessmentCreationController {
     @PostMapping(path = "/settimer", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map setTimer(@RequestBody String data
     ) {
+        logger.info("AssessmentCreationController -> setTimer() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -578,7 +612,7 @@ public class AssessmentCreationController {
 //                                                }
 //                                            }).start();
                                         } catch (Exception ex) {
-                                            logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex);
+                                            logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex.getMessage());
                                         }
                                     }
                                     timer.cancel();
@@ -600,12 +634,15 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in setTimer() :: While saving topic wise scores => " + ex);
         }
+        logger.info("AssessmentCreationController -> list() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @PostMapping(path = "/save", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map saveUserAssessment(@RequestBody String data
     ) {
+        logger.info("AssessmentCreationController -> list() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -734,16 +771,18 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> saveAssessment() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> list() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @PostMapping(path = "/stdntquiz")
     public Map getQuiz(@RequestBody String data
     ) {
+        logger.info("AssessmentCreationController -> getQuiz() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
-            logger.info("AssessmentCreationController --> getQuiz() :: ");
             logger.info("AssessmentCreationController --> getQuiz() :: map data" + map);
             resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()), Long.parseLong(map.get("organizationId").toString()));
         } catch (IOException ex) {
@@ -751,13 +790,14 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> getQuiz() :: ", ex);
         }
-        logger.info("Method Executed Successfully to AssessmentCreationController -> getQuiz()" + resultMap);
+        logger.info("AssessmentCreationController -> getQuiz () :: Method completed successfully. With response date : " + resultMap);
         return resultMap;
     }
 
     @PostMapping(path = "/stdntresult", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map saveAssessment(@RequestBody String data, HttpServletRequest request
     ) {
+        logger.info("AssessmentCreationController -> saveAssessment() :: Method started successfully.");
         Map resultMap = new HashMap<>();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -774,12 +814,15 @@ public class AssessmentCreationController {
         } catch (IOException ex) {
             logger.error("Problem in AssessmentCreationController -> saveAssessment() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> saveAssessment() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @PostMapping(path = "/delete", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map delete(@RequestBody String data
     ) {
+        logger.info("AssessmentCreationController -> delete() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -797,12 +840,15 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> delete() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> delete() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @PostMapping(path = "/save_ans_details")
     public void saveAnswerDetails(@RequestBody String data
     ) {
+        logger.info("AssessmentCreationController -> saveAnswerDetails() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -812,12 +858,15 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> saveAnswerDetails() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> saveAnswerDetails() :: Method completed successfully. With response date : " + resultMap);
+
     }
 
     // this api is meant to get completed assessment counts of candidate and associate both
     @PostMapping(path = "/completedcount", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map getCompletedAssessmentCount(@RequestBody String data
     ) {
+        logger.info("AssessmentCreationController -> getCompletedAssessmentCount() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             String orgId = mapper.readValue(EncryptDecryptUtils.decrypt(data), String.class);
@@ -832,11 +881,14 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> delete() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> getCompletedAssessmentCount() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @PostMapping(path = "/associatetopicscore")
     public Map getAssociateTopicScores(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> getAssociateTopicScores() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -846,6 +898,8 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> getAssociateTopicScores() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> getAssociateTopicScores() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
