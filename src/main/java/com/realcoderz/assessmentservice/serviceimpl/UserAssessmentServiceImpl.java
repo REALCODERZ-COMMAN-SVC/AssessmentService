@@ -142,7 +142,7 @@ public class UserAssessmentServiceImpl implements UserAssessmentService {
             resultMap.put("correctQuestion", countCorrectQuestions);
             resultMap.put("totalNoOfQuestion", returnList.size());
             resultMap.put("assessment", assess);
-            System.out.println(resultMap);
+            System.out.println("Calculated Result for LearnerId => "+userId+":: assessmentId => "+assessemntId+" :: and result is => "+resultMap.toString());
             return resultMap;
         } else {
             return Collections.EMPTY_MAP;
