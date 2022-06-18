@@ -18,6 +18,7 @@ import com.realcoderz.assessmentservice.domain.UserMaster;
 import com.realcoderz.assessmentservice.exceptions.EntiryNotFoundException;
 import com.realcoderz.assessmentservice.payload.SwaggerController.AssessmentCreationControllerPayload;
 import com.realcoderz.assessmentservice.payload.SwaggerController.RCAssessmentCreationControllerPayload;
+import com.realcoderz.assessmentservice.repository.AssessmentCreationRepository;
 import com.realcoderz.assessmentservice.repository.AssociateAnswerTrackRepository;
 import com.realcoderz.assessmentservice.repository.AssociateValidateRepository;
 import com.realcoderz.assessmentservice.repository.QuestionMasterRepository;
@@ -110,6 +111,9 @@ public class AssessmentCreationController {
 
     @Autowired
     private BatchMasterService batchMasterService;
+
+    @Autowired
+    private AssessmentCreationRepository assessmentCreationRepository;
 
     @PostMapping
     public Map list(@RequestBody String data) {
@@ -253,6 +257,7 @@ public class AssessmentCreationController {
             if (assessment != null && count.isEmpty()) {
                 LinkedCaseInsensitiveMap result = new LinkedCaseInsensitiveMap();
                 List<LinkedCaseInsensitiveMap> questions = new ArrayList<>();
+                Set topicList = new HashSet<>();
                 result.put("assessment_id", assessment.getAssessment_id());
                 result.put("assessment_desc", assessment.getAssessment_desc());
                 result.put("instructions", assessment.getInstructions());
@@ -261,12 +266,21 @@ public class AssessmentCreationController {
                 result.put("assessmentTimeBound", assessment.getAssessmentTimeBound());
                 assessment.getQuestion_list().stream().forEach(que -> {
                     LinkedCaseInsensitiveMap quest = new LinkedCaseInsensitiveMap();
+                    LinkedCaseInsensitiveMap topics = new LinkedCaseInsensitiveMap();
+
                     quest.put("question_id", que.getQuestion_id());
                     quest.put("question_type_id", que.getQuestion_type_id());
                     quest.put("question_desc", que.getQuestion_desc());
                     quest.put("codingTemplate", que.getCodingTemplate());
                     quest.put("no_of_answer", que.getNo_of_answer());
                     quest.put("questionTime", que.getQuestionTime());
+                    quest.put("topic_id", que.getTopic_id());
+                    quest.put("topic_Name", assessmentCreationRepository.topicNameById(que.getTopic_id()));
+                    topics.put("topic_id", que.getTopic_id());
+                    topics.put("topic_Name", assessmentCreationRepository.topicNameById(que.getTopic_id()));
+                    topics.put("count_no_of_question", assessmentCreationRepository.countNoOfQuestion(que.getTopic_id(), assessment.getOrganizationId(), assessment.getAssessment_id()));
+                    topicList.add(topics);
+
                     List<LinkedCaseInsensitiveMap> options = new ArrayList<>();
                     if (que.getOptions_list() != null) {
                         que.getOptions_list().stream().forEach(opt -> {
@@ -282,6 +296,8 @@ public class AssessmentCreationController {
                 });
                 Collections.shuffle(questions);
                 result.put("question_list", questions);
+                result.put("topic_list", topicList);
+                result.put("topic_wise_question", questions);
                 resultMap.put("assessment", result);
                 resultMap.put("status", "success");
             } else if (!count.isEmpty()) {
