@@ -33,8 +33,6 @@ public interface AssessmentCreationService {
 
     public List<LinkedCaseInsensitiveMap> getQuestionsForAssessment(Map map);
 
-    public List<AssessmentCreation> assessmentList(String assessment_desc);
-
     public List<LinkedCaseInsensitiveMap> getUserAssessmentByUserAssessmentId(Long user_id, Long assessment_id);
 
     public List<LinkedCaseInsensitiveMap> getTopicsForRanAssess(Map map);

@@ -6,11 +6,11 @@
 package com.realcoderz.assessmentservice.domain;
 
 import java.io.Serializable;
-import java.util.Objects;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,6 +27,7 @@ import org.hibernate.annotations.Parameter;
 @Setter
 @ToString
 @NoArgsConstructor
+@EqualsAndHashCode
 public class CodingQuestionTestCases implements Serializable{
        @Id
     @GeneratedValue(generator = "coding_question_test_case-sequence-generator")

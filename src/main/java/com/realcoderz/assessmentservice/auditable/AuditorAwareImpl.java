@@ -25,6 +25,7 @@ public class AuditorAwareImpl implements AuditorAware<String> {
 
     @Override
     public Optional<String> getCurrentAuditor() {
+        
         try {
             String token = BearerTokenUtil.getBearerTokenHeader();
             long userId = tokenProvider.getUserIdFromToken(token.substring(7, token.length()));

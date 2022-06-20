@@ -23,10 +23,10 @@ import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -37,8 +37,8 @@ import com.realcoderz.assessmentservice.auditable.Auditable;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
-public class QuestionMaster extends Auditable<String> implements Serializable {
+@EqualsAndHashCode
+public class QuestionMaster extends Auditable<String> implements Serializable{
 
     @Id
     @GeneratedValue(generator = "question-sequence-generator")

@@ -23,7 +23,6 @@ import lombok.EqualsAndHashCode;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode
 public class StudentAssessmentDetails extends Auditable<String> implements Serializable {
 
     @Id
