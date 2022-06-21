@@ -38,7 +38,7 @@ import lombok.EqualsAndHashCode;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode
-public class QuestionMaster extends Auditable<String> implements Serializable{
+public class QuestionMaster extends Auditable<String> implements Serializable {
 
     @Id
     @GeneratedValue(generator = "question-sequence-generator")
@@ -70,14 +70,17 @@ public class QuestionMaster extends Auditable<String> implements Serializable{
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "question_id")
     @OrderBy(value = "option_id ASC")
+    @EqualsAndHashCode.Exclude
     private List<QuestionOptionMapping> options_list;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "question_id")
     @OrderBy(value = "testCaseId ASC")
+    @EqualsAndHashCode.Exclude
     private List<CodingQuestionTestCases> testCases;
 
     @ManyToMany(mappedBy = "question_list", cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @EqualsAndHashCode.Exclude
     private Set<AssessmentCreation> assessmentCreation;
 
 //    @ManyToMany(mappedBy = "question_list", cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})

@@ -89,6 +89,7 @@ public class BatchMaster extends Auditable<String> implements Serializable {
 
     @OneToMany
     @JoinColumn(name = "batch_id")
+    @EqualsAndHashCode.Exclude
     private Set<UserMaster> associates;
 
     public BatchMaster(Long batch_id, String learning_journey, String batch_desc, Date batch_start_date, Integer selected_no_of_weeks, Date batch_end_date, Long language_id, Character active, Long learningJourneyId) {
