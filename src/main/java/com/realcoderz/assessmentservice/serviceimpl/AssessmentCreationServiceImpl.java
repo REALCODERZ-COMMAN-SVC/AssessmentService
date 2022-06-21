@@ -19,7 +19,6 @@ import com.realcoderz.assessmentservice.exceptions.EntiryNotFoundException;
 import com.realcoderz.assessmentservice.repository.AssessmentCreationRepository;
 import com.realcoderz.assessmentservice.repository.CandidateStatusRepository;
 import com.realcoderz.assessmentservice.repository.LanguageMasterRepository;
-import com.realcoderz.assessmentservice.repository.OrganizationRepository;
 import com.realcoderz.assessmentservice.repository.QuestionMasterRepository;
 import com.realcoderz.assessmentservice.repository.QuestionOptionMappingRepository;
 import com.realcoderz.assessmentservice.repository.StudentAnswerTrackRepository;
@@ -105,46 +104,40 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     @Override
     public Map add(Map map) {
         Map resultSet = new HashMap();
-        AssessmentCreation assessmentCreation = new AssessmentCreation();
-        Set<QuestionMaster> questions = new HashSet();
-        Set<AssessmentCreation> assessmentCreations = new HashSet<>();
-        assessmentCreation.setLanguage_id(Long.parseLong(map.get("language_id").toString()));
-        assessmentCreation.setDifficulty_id(Long.parseLong(map.get("difficulty_id").toString()));
-        assessmentCreation.setCodingmarks_id(Long.parseLong(map.get("codingmarks_id").toString()));
-        assessmentCreation.setAssessment_desc((String) map.get("rcassessment_desc"));
-        assessmentCreation.setTime(Integer.parseInt(map.get("time").toString()));
-        assessmentCreation.setCreation_type(map.get("creation_type").toString());
-        assessmentCreation.setActive(map.get("active").toString().charAt(0));
-        assessmentCreation.setOrganizationId(Long.parseLong(map.get("organizationId").toString()));
-        List<LinkedHashMap> topicWiseData = (List<LinkedHashMap>) map.get("randomTopics");
-        for (LinkedHashMap topic : topicWiseData) {
-            if (topic.containsKey("selectedMCQQuestion")) {
-                if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
-                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(map.get("language_id").toString()), Long.parseLong(map.get("difficulty_id").toString()), Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
-                    questions.addAll(assessmentCreationRepository.findByIds(ids));
+        try {
+            AssessmentCreation assessmentCreation = new AssessmentCreation();
+            Set<QuestionMaster> questions = new HashSet();
+            Set<AssessmentCreation> assessmentCreations = new HashSet<>();
+            assessmentCreation.setLanguage_id(Long.parseLong(map.get("language_id").toString()));
+            assessmentCreation.setDifficulty_id(Long.parseLong(map.get("difficulty_id").toString()));
+            assessmentCreation.setCodingmarks_id(Long.parseLong(map.get("codingmarks_id").toString()));
+            assessmentCreation.setAssessment_desc((String) map.get("rcassessment_desc"));
+            assessmentCreation.setTime(Integer.parseInt(map.get("time").toString()));
+            assessmentCreation.setCreation_type(map.get("creation_type").toString());
+            assessmentCreation.setActive(map.get("active").toString().charAt(0));
+            assessmentCreation.setOrganizationId(Long.parseLong(map.get("organizationId").toString()));
+            List<LinkedHashMap> topicWiseData = (List<LinkedHashMap>) map.get("randomTopics");
+            for (LinkedHashMap topic : topicWiseData) {
+                if (topic.containsKey("selectedMCQQuestion")) {
+                    if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
+                        List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(map.get("language_id").toString()), Long.parseLong(map.get("difficulty_id").toString()), Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
+                        questions.addAll(assessmentCreationRepository.findByIds(ids));
+                    }
                 }
             }
+            assessmentCreation.setQuestion_list(questions);
+            assessmentCreations.add(assessmentCreation);
+            questions.forEach(a -> {
+                a.setAssessmentCreation(assessmentCreations);
+            });
+
+            assessmentCreation = assessmentCreationRepository.save(assessmentCreation);
+            resultSet.put("status", "success");
+            resultSet.put("data", assessmentCreation);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        assessmentCreation.setQuestion_list(questions);
-        assessmentCreations.add(assessmentCreation);
-        questions.forEach(a -> {
-            a.setAssessmentCreation(assessmentCreations);
-        });
-
-        assessmentCreation = assessmentCreationRepository.save(assessmentCreation);
-        resultSet.put("status", "success");
-        resultSet.put("data", assessmentCreation);
         return resultSet;
-    }
-
-    @Override
-    public void save(AssessmentCreation assessmentCreation) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void saveRanAssess(Map map) {
-
     }
 
     @Override
@@ -157,29 +150,11 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         assessmentCreationRepository.delete(ac);
     }
 
-    @Override
-    public void update(Long id, AssessmentCreation assessmentCreation) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+
 
     @Override
     public List<LinkedCaseInsensitiveMap> assessments(Map map) {
         return assessmentCreationRepository.assessments();
-    }
-
-    @Override
-    public Set<QuestionMaster> findQuestionsByTopicAndQuestionId(List<String> ids) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<LinkedCaseInsensitiveMap> getQuestionsForAssessment(Map map) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<AssessmentCreation> assessmentList(String assessment_desc) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -1031,4 +1006,29 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
 //            logger.error("Problem in StudentAssessmentServiceImpl :: assessmentNotification() => " + ex);
 //        }
 //    }
+
+    @Override
+    public void save(AssessmentCreation assessmentCreation) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void update(Long id, AssessmentCreation assessmentCreation) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Set<QuestionMaster> findQuestionsByTopicAndQuestionId(List<String> ids) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public List<LinkedCaseInsensitiveMap> getQuestionsForAssessment(Map map) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void saveRanAssess(Map map) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

@@ -8,6 +8,7 @@ package com.realcoderz.assessmentservice.domain;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.realcoderz.assessmentservice.auditable.Auditable;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
@@ -15,6 +16,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Temporal;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,6 +37,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Setter
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode(callSuper = false)
 public class UserMaster extends Auditable<String> implements Serializable {
 
     @Id

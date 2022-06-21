@@ -26,7 +26,6 @@ import lombok.EqualsAndHashCode;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode
 public class UserAssessmentDetails extends Auditable<String> implements Serializable {
 
     @Id

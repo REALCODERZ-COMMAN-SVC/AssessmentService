@@ -17,10 +17,10 @@ import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -31,7 +31,6 @@ import com.realcoderz.assessmentservice.auditable.Auditable;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
 public class QuestionOptionMapping extends Auditable<String> implements Serializable {
 
     @Id

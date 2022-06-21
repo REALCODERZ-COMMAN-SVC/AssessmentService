@@ -5,6 +5,7 @@
  */
 package com.realcoderz.assessmentservice.domain;
 
+import com.realcoderz.assessmentservice.auditable.Auditable;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.Entity;
@@ -12,10 +13,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
@@ -27,7 +28,7 @@ import org.hibernate.annotations.Parameter;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
+@EqualsAndHashCode(callSuper = false)
 public class LanguageMaster extends Auditable<String> implements Serializable {
 
     @Id

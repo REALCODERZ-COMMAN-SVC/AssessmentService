@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -25,6 +26,7 @@ import com.realcoderz.assessmentservice.auditable.Auditable;
 @Setter
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode(callSuper = false)
 public class StudentAnswerTrack extends Auditable<String> implements Serializable {
 
     @Id

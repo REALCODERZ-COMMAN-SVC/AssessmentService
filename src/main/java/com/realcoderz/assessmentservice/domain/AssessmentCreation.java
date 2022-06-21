@@ -25,6 +25,7 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.AllArgsConstructor;
 
 /**
  *
@@ -34,6 +35,7 @@ import com.realcoderz.assessmentservice.auditable.Auditable;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "assessment_id")
 public class AssessmentCreation extends Auditable<String> implements Serializable {
 
