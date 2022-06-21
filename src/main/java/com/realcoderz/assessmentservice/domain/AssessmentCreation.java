@@ -26,6 +26,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import com.realcoderz.assessmentservice.auditable.Auditable;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -79,6 +80,7 @@ public class AssessmentCreation extends Auditable<String> implements Serializabl
     @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinTable(name = "assessment_question", joinColumns = @JoinColumn(name = "assessment_id"), inverseJoinColumns = @JoinColumn(name = "question_id"))
     @OrderBy(value = "question_id ASC")
+    @EqualsAndHashCode.Exclude
     private Set<QuestionMaster> question_list;
 
     private String assessmentTimeBound;

@@ -49,6 +49,7 @@ public class QuestionOptionMapping extends Auditable<String> implements Serializ
     @NotNull(message = "Active status can't be empty")
     private Character isActive;
     @ManyToOne
+    @EqualsAndHashCode.Exclude
     private QuestionMaster questionMaster;
 
     public QuestionOptionMapping(Long option_id, String option_desc, Character isActive, QuestionMaster questionMaster) {
