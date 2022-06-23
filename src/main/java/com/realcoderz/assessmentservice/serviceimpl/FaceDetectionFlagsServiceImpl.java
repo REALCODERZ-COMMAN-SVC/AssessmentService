@@ -86,17 +86,24 @@ public class FaceDetectionFlagsServiceImpl implements FaceDetectionFlagsService 
       Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);      
       logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => Request data "+map);
       Boolean jobProfileWebCamOnDetails= facedetectionflagsrepository.findWebcamOnByJobPortalId(Long.parseLong(map.get("jobPortalId").toString()));
+      logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => value of "+jobProfileWebCamOnDetails);
       if(jobProfileWebCamOnDetails == false){
+      logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => in if "+jobProfileWebCamOnDetails);
           resultMap.put("webcam", "N");
       }
       else
       {
+      logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => into else block");
       FaceDetectionFlags faceDetectionFlagDetails= facedetectionflagsrepository.findByStudentId(Long.parseLong(map.get("studentId").toString()));
+      logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => in if "+faceDetectionFlagDetails);
       resultMap.put("webcam", "Y");
       if(faceDetectionFlagDetails!=null)
       {
+          logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => in if second time "+faceDetectionFlagDetails);
           if(faceDetectionFlagDetails.getCellphone_detection_count()>0 && faceDetectionFlagDetails.getCellphone_detection_time().length()>0)
           {
+              logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => cellphone count "+faceDetectionFlagDetails.getCellphone_detection_count());
+              logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => cellphone time count "+faceDetectionFlagDetails.getCellphone_detection_time());
               resultMap.put("Cellphone_detection_count_msg", "Yes");
               resultMap.put("Cellphone_detection_timecount_msg" ,this.sumOfFaceDeductionTime(faceDetectionFlagDetails.getCellphone_detection_time())+ " sec");
           }
@@ -106,6 +113,8 @@ public class FaceDetectionFlagsServiceImpl implements FaceDetectionFlagsService 
           }
            if(faceDetectionFlagDetails.getMorethanoneuser_count()>0 && faceDetectionFlagDetails.getMorethanoneuser_time().length()>0)
           {
+              logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => more than one user count "+faceDetectionFlagDetails.getMorethanoneuser_count());
+              logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => more than one user time count "+faceDetectionFlagDetails.getMorethanoneuser_time());
               resultMap.put("More_than_one_user_count_msg", "Yes");
               resultMap.put("More_than_one_user_timecount_msg",this.sumOfFaceDeductionTime(faceDetectionFlagDetails.getMorethanoneuser_time())+  " sec");
           }
@@ -116,6 +125,8 @@ public class FaceDetectionFlagsServiceImpl implements FaceDetectionFlagsService 
            }
            if(faceDetectionFlagDetails.getUsermovement_count()>0 && faceDetectionFlagDetails.getUsermovement_time().length()>0) 
            {  
+              logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => user movement count "+faceDetectionFlagDetails.getUsermovement_count());
+              logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => user movement time count "+faceDetectionFlagDetails.getUsermovement_time());
               resultMap.put("person_not_available_count_msg", "Yes");
               resultMap.put("person_not_available_timecount_msg",this.sumOfFaceDeductionTime(faceDetectionFlagDetails.getUsermovement_time())+  " sec");
            }
@@ -127,6 +138,7 @@ public class FaceDetectionFlagsServiceImpl implements FaceDetectionFlagsService 
           resultMap.put("status", "success");
       }
       else{
+           logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => NullPointerException");
           throw new NullPointerException();
       }
       }
@@ -135,12 +147,14 @@ public class FaceDetectionFlagsServiceImpl implements FaceDetectionFlagsService 
       }
       catch(NullPointerException ex)
       {
+          logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => in catch block" +ex);
           resultMap.clear();
           resultMap.put("status", "student Id can't be null");
       }catch(Exception e){
           resultMap.put("status", "exception");
           e.printStackTrace();
           resultMap.put("msg", "something went wrong");
+          logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => in catch block" +e);
       }
       logger.info("FaceDetectionFlagsController :: getFaceDetectionFlagsCountById() => Response data " +resultMap);
       return resultMap;
