@@ -658,7 +658,7 @@ public class AssessmentCreationController {
     @PostMapping(path = "/save", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map saveUserAssessment(@RequestBody String data
     ) {
-        logger.info("AssessmentCreationController -> list() :: Method started successfully.");
+        logger.info("AssessmentCreationController -> saveUserAssessment() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);

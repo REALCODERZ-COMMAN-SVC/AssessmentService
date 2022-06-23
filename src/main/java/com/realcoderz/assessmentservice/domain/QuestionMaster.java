@@ -96,6 +96,7 @@ public class QuestionMaster extends Auditable<String> implements Serializable {
     private Long organizationId;
     @NotNull(message = "Topic Id can't be empty")
     private Long topic_id;
+    private String shuffle;
 
     public QuestionMaster(Long question_id, Long language_id, Long question_type_id, String question_desc, Integer no_of_answer, List<QuestionOptionMapping> options_list, Set<AssessmentCreation> assessmentCreation, Character active, String parameterForTestCases, String expectedOutput, List<CodingQuestionTestCases> testCases, String questionTime) {
         this.question_id = question_id;

@@ -150,8 +150,6 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         assessmentCreationRepository.delete(ac);
     }
 
-
-
     @Override
     public List<LinkedCaseInsensitiveMap> assessments(Map map) {
         return assessmentCreationRepository.assessments();
@@ -546,6 +544,11 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         List<LinkedCaseInsensitiveMap> questionListWithOptions = new ArrayList<>();
         fetchQuestionList.stream().forEach(qList -> {
             List<LinkedCaseInsensitiveMap> options = questionOptionMappingRepository.findByQuesId(Long.parseLong(qList.get("question_id").toString()));
+            if (qList.containsKey("shuffle")) {
+                if (qList.containsValue("y") || qList.containsValue("Y")) {
+                    Collections.shuffle(options);
+                }
+            }
             qList.put("options", options);
             questionListWithOptions.add(qList);
         });
@@ -572,6 +575,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 questionListWithOptions.stream().forEach(que -> {
                     LinkedCaseInsensitiveMap quest = new LinkedCaseInsensitiveMap();
                     LinkedCaseInsensitiveMap topics = new LinkedCaseInsensitiveMap();
+                    quest.put("shuffle", que.get("shuffle"));
                     quest.put("question_id", que.get("question_id"));
                     quest.put("question_type_id", que.get("question_type_id"));
                     quest.put("question_desc", que.get("question_desc"));
@@ -728,10 +732,13 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     }
                 };
                 timer.schedule(task, ((Integer.parseInt(assessment.get("time").toString()) + 1) * 60 * 1000));
-                Collections.shuffle(questions);
-                result.put("question_list", questions);
+                List question1 = questions.stream().filter(que -> que.get("shuffle").toString().equalsIgnoreCase("y")).collect(Collectors.toList());
+                Collections.shuffle(question1);
+                List question2 = questions.stream().filter(que -> que.get("shuffle").toString().equalsIgnoreCase("n")).collect(Collectors.toList());
+                question1.addAll(question2);
+                result.put("question_list", question1);
                 result.put("topic_list", topicList);
-                result.put("topic_wise_question", questions);
+                result.put("topic_wise_question", question1);
                 resultMap.put("assessment", result);
                 resultMap.put("status", "success");
             }
@@ -811,7 +818,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 studentAssessment.setTotalPercentage(mcqPercentage);
             }
             StudentAssessment stAssess = save(studentAssessment);
-//Save Student Feedback           
+//Save Student Feedback
             StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
             stdntFdbck.setStatus("Assessment Completed");
             stdntFdbck.setScholarship("In Process");
@@ -1006,7 +1013,6 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
 //            logger.error("Problem in StudentAssessmentServiceImpl :: assessmentNotification() => " + ex);
 //        }
 //    }
-
     @Override
     public void save(AssessmentCreation assessmentCreation) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

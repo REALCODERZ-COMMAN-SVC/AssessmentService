@@ -20,7 +20,6 @@ import com.realcoderz.assessmentservice.repository.TopicMasterRepository;
 import com.realcoderz.assessmentservice.service.QuestionMasterService;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -67,7 +66,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
 
     @Autowired
     private DifficultyMasterRepository difficultyMasterRepository;
-    
+
     @Autowired
     private TopicMasterRepository topicMasterRepository;
 
@@ -110,7 +109,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
         return result;
     }
 
-       @Override
+    @Override
     public Map uploadQuestions(MultipartFile file, Long organizationId, Long questionTypeId) {
         Map resultMap = new HashMap<>();
         List<Map> li = new ArrayList();
@@ -161,6 +160,9 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                     break;
                                 case "technical":
                                     finalmp.put("techIndex", cell.getColumnIndex());
+                                    break;
+                                case "shuffle":
+                                    finalmp.put("shuffle", cell.getColumnIndex());
                                     break;
 
                             }
@@ -214,6 +216,16 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                                 mt.put("optionAnswer", printCellValue(cell));
                                             }
 
+                                        } else if (cell.getColumnIndex() == finalmp.get("shuffle")) {
+                                            if ((printCellValue(cell) == null) || (printCellValue(cell) != null && ("".equalsIgnoreCase(String.valueOf(printCellValue(cell)).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
+                                                mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " shuffle is mandatory field .!");
+                                            } else if (!String.valueOf(printCellValue(cell)).equalsIgnoreCase("y") && !String.valueOf(printCellValue(cell)).equalsIgnoreCase("n")) {
+                                                mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " Value of option answer should be Y or N .!");
+
+                                            } else {
+                                                mt.put("shuffle", printCellValue(cell));
+                                            }
+
                                         } else if (cell.getColumnIndex() == finalmp.get("odIndex")) {
                                             if ((printCellValue(cell) == null) || (printCellValue(cell) != null && ("".equalsIgnoreCase(String.valueOf(printCellValue(cell)).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
                                                 mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " optionDescription is mandatory field .!");
@@ -252,6 +264,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                                     } else {
                                                         resultMap.put("error", "");
                                                     }
+                                                    //mp.put("Shuffle", "Yes");
                                                     li.add(new LinkedHashMap(mp));
                                                     mp.clear();
                                                     optionList.clear();
@@ -372,12 +385,15 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                                 } else {
                                                     mp.put("technical", printCellValue(cell));
                                                 }
-                                            } else if (questionTypeId == 1 && cell.getColumnIndex() == finalmp.get("odIndex")) {
+                                            } else if (questionTypeId == 1 && cell.getColumnIndex() == finalmp.get("shuffle")) {
                                                 if ((printCellValue(cell) == null) || (printCellValue(cell) != null && ("".equalsIgnoreCase(String.valueOf(printCellValue(cell)).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
-                                                    mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " optionDescription is mandatory field .!");
+                                                    mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " shuffle is mandatory field .!");
+                                                    mp.put("class", "alert alert-danger");
+                                                } else if (!String.valueOf(printCellValue(cell)).equalsIgnoreCase("y") && !String.valueOf(printCellValue(cell)).equalsIgnoreCase("n")) {
+                                                    mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " Value of Technical should be Y or N .!");
                                                     mp.put("class", "alert alert-danger");
                                                 } else {
-                                                    m.put(String.valueOf(printCellValue(cell)), String.valueOf(mt.get("optionAnswer")));
+                                                    mp.put("shuffle", printCellValue(cell));
                                                 }
                                             } else if (questionTypeId == 2 && cell.getColumnIndex() == finalmp.get("eoIndex")) {
                                                 mp.put("expectedOutput", String.valueOf(printCellValue(cell)));
@@ -413,7 +429,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                                 }
                                             }
                                         }
-                                        if ((questionTypeId == 1 && row.getPhysicalNumberOfCells() != 11) || (questionTypeId == 2 && row.getPhysicalNumberOfCells() != 12)) {
+                                        if ((questionTypeId == 1 && row.getPhysicalNumberOfCells() != 12) || (questionTypeId == 2 && row.getPhysicalNumberOfCells() != 12)) {
                                             mp.put("error", (mp.get("error") != null ? (!String.valueOf(mp.get("error")).contains("Please fill in all data.") ? String.valueOf(mp.get("error")) : "") : "") + " Please fill all data!");
                                         }
 
@@ -650,7 +666,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
 //        questionMasterRepository.saveAll(questionSet);
 //        return questionSet.size();
 //    }
-   @Override
+    @Override
     public Integer excelSave(Map mp) {
         List<QuestionMaster> questionSet = new ArrayList<>();
         List<LinkedHashMap> data = (List) mp.get("data");
@@ -707,6 +723,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
             questionMaster.setActive(a.get("active").toString().charAt(0));
             if (a.get("question_type_id").toString().equalsIgnoreCase("1")) {
                 questionMaster.setNo_of_answer(Integer.parseInt(a.get("no_of_answer").toString()));
+                questionMaster.setShuffle(a.get("shuffle") != null ? a.get("shuffle").toString() : "No");
                 List<LinkedHashMap> list = (List<LinkedHashMap>) a.get("options_list");
                 List<QuestionOptionMapping> options = new ArrayList<>();
                 list.stream().forEach(qom -> {
@@ -740,6 +757,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
         questionMasterRepository.saveAll(questionSet);
         return questionSet.size();
     }
+
     /**
      * To save the excel rows having only valid records
      *
@@ -767,7 +785,7 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
         }
     }
 
-    //to check if row is empty 
+    //to check if row is empty
     private boolean checkIfRowIsEmpty(Row row) {
         if (row == null) {
             return true;
