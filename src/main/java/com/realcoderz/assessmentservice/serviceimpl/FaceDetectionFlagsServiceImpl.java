@@ -43,24 +43,39 @@ public class FaceDetectionFlagsServiceImpl implements FaceDetectionFlagsService 
         try {
             logger.info("FaceDetectionFlagsServiceImpl :: addFaceDetectionFlags() => Request data " + map);
             FaceDetectionFlags flags = new FaceDetectionFlags();
-            flags.setCellphone_detection_count((Integer) map.get("cellphone_detection_count"));
-            flags.setCellphone_detection_time((String) map.get("cellphone_detection_time"));
-            flags.setMorethanoneuser_count((Integer) map.get("morethanoneuser_count"));
-            flags.setMorethanoneuser_time((String) map.get("morethanoneuser_time"));
-            flags.setUsermovement_count((Integer) map.get("usermovement_count"));
-            flags.setUsermovement_time((String) map.get("usermovement_time"));
-            flags.setEmail((String) map.get("email"));
-            flags.setOrgId((Long.parseLong(map.get("organizationId").toString())));
+            if(map.get("organizationId")!=null && map.get("studentId")!=null && map.get("email")!=null )
+            {
             flags.setStudentId((Long.parseLong(map.get("studentId").toString())));
+            flags.setOrgId((Long.parseLong(map.get("organizationId").toString())));
+            flags.setEmail(map.get("email").toString());
+            if(map.get("cellphone_detection_count") !=null  && map.get("cellphone_detection_time")!=null){
+            flags.setCellphone_detection_count((Integer.parseInt(map.get("cellphone_detection_count").toString())));
+            flags.setCellphone_detection_time(map.get("cellphone_detection_time").toString());
+            }
+            if(map.get("morethanoneuser_time") !=null  && map.get("morethanoneuser_count")!=null){
+            flags.setMorethanoneuser_count((Integer.parseInt(map.get("morethanoneuser_count").toString())));
+            flags.setMorethanoneuser_time(map.get("morethanoneuser_time").toString());
+            }
+            if(map.get("usermovement_count") !=null  && map.get("usermovement_time")!=null){
+            flags.setUsermovement_count((Integer.parseInt(map.get("usermovement_count").toString())));
+            flags.setUsermovement_time(map.get("usermovement_time").toString());
+            }
             FaceDetectionFlags findByStudentId = facedetectionflagsrepository.findByStudentId(Long.parseLong(map.get("studentId").toString()));
             if (findByStudentId != null && findByStudentId.getStudentId() == (Long.parseLong(map.get("studentId").toString()))) {
                 logger.info("FaceDetectionFlagsServiceImpl :: addFaceDetectionFlags() => findById " + findByStudentId);
                 flags.setFacedetection_id(findByStudentId.getFacedetection_id());
                 facedetectionflagsrepository.save(flags);
+                resultMap.put("status", "success");
                 logger.info("FaceDetectionFlagsServiceImpl :: addFaceDetectionFlags() => face detection data save already exist" + flags);
             } else {
                 facedetectionflagsrepository.save(flags);
+                resultMap.put("status", "success");
                 logger.info("FaceDetectionFlagsServiceImpl :: addFaceDetectionFlags() => face detection data save for new user " + flags);
+            }
+            }else{
+                resultMap.clear();
+                logger.info("OrgId, StudentID and Email can't be null");
+                resultMap.put("status", "OrgId, StudentID and Email value can't be null");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
