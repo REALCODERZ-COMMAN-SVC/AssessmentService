@@ -46,8 +46,7 @@ public class FaceDetectionFlagsController {
         try {
            Map mpp = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);   
            logger.info("FaceDetectionFlagsController :: addfacedetectionflags() => Request data " +mpp);
-           facedetectionflagsservice.addFaceDetectionFlags(mpp);
-           resultmap.put("status", "success");
+            resultmap= facedetectionflagsservice.addFaceDetectionFlags(mpp);
            
         } catch (Exception ex) 
         {
