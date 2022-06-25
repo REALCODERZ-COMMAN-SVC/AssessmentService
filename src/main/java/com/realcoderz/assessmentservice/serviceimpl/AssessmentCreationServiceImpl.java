@@ -120,7 +120,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         for (LinkedHashMap topic : topicWiseData) {
             if (topic.containsKey("selectedMCQQuestion")) {
                 if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
-                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(map.get("language_id").toString()),Long.parseLong(map.get("difficulty_id").toString()),Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
+                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(map.get("language_id").toString()), Long.parseLong(map.get("difficulty_id").toString()), Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
                     questions.addAll(assessmentCreationRepository.findByIds(ids));
                 }
             }
@@ -312,7 +312,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         for (LinkedHashMap topic : topicWiseData) {
             if (topic.containsKey("selectedMCQQuestion")) {
                 if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
-                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(map.get("language_id").toString()),Long.parseLong(map.get("difficulty_id").toString()),Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
+                    List<Long> ids = assessmentCreationRepository.getRandomQuestions(Long.parseLong(map.get("language_id").toString()), Long.parseLong(map.get("difficulty_id").toString()), Long.parseLong(topic.get("topicId").toString()), Long.parseLong(topic.get("questionTypeId").toString()), Integer.parseInt(topic.get("selectedMCQQuestion").toString()));
                     if (!ids.isEmpty() && ids.size() > 0) {
                         questions.addAll(assessmentCreationRepository.findByIds(ids));
                     } else {
@@ -960,4 +960,60 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
 //            logger.error("Problem in StudentAssessmentServiceImpl :: assessmentNotification() => " + ex);
 //        }
 //    }
+    @Override
+    public LinkedCaseInsensitiveMap getTopicWiseScoresForAssociates(LinkedCaseInsensitiveMap userAssessment) {
+        LinkedCaseInsensitiveMap associateTopicScores = new LinkedCaseInsensitiveMap();
+        List<LinkedCaseInsensitiveMap> candidateTopicWiseScores = new ArrayList<>();
+        if (userAssessment != null) {
+            associateTopicScores.put("haveCoding", 0);
+            Map<String, LinkedCaseInsensitiveMap> topicWiseScores = new HashMap<>();
+            if (userAssessment.containsKey("user_assessment_id") && userAssessment.get("user_assessment_id") != null
+                    && userAssessment.containsKey("assessment_id") && userAssessment.get("assessment_id") != null) {
+                List<LinkedCaseInsensitiveMap> associatesQuestionStatus = userMasterRepository.associatesQuestionStatus(Long.parseLong(userAssessment.get("user_assessment_id").toString()));
+                Long checkCodingCount = associatesQuestionStatus.stream().filter(data -> Long.parseLong(data.get("question_type_id").toString()) == 2).count();
+                if (checkCodingCount > 0) {
+                    associateTopicScores.put("haveCoding", 1);
+                }
+                if (!associatesQuestionStatus.isEmpty() && associatesQuestionStatus.size() > 0) {
+
+                    associatesQuestionStatus.stream().forEach(data -> {
+                        if (!topicWiseScores.containsKey(data.get("topic_name").toString())) {
+                            LinkedCaseInsensitiveMap topicCount = new LinkedCaseInsensitiveMap();
+                            if (data.get("answer") != null && data.get("answer").toString().equalsIgnoreCase("Y")) {
+                                topicCount.put("correct_questions", 1);
+                            } else {
+                                topicCount.put("correct_questions", 0);
+                            }
+                            topicCount.put("total_questions", 1);
+                            topicWiseScores.put(data.get("topic_name").toString(), topicCount);
+                        } else {
+                            LinkedCaseInsensitiveMap topicWiseCount = topicWiseScores.get(data.get("topic_name").toString());
+                            if (topicWiseCount != null) {
+                                if (data.get("answer") != null && data.get("answer").toString().equalsIgnoreCase("Y")) {
+                                    topicWiseCount.put("correct_questions", Integer.parseInt(topicWiseCount.get("correct_questions").toString()) + 1);
+                                }
+                                topicWiseCount.put("total_questions", Integer.parseInt(topicWiseCount.get("total_questions").toString()) + 1);
+                            }
+                            topicWiseScores.put(data.get("topic_name").toString(), topicWiseCount);
+                        }
+                    });
+                }
+            }
+            if (!topicWiseScores.isEmpty()) {
+                topicWiseScores.forEach((key, value) -> {
+                    LinkedCaseInsensitiveMap questionsCount = new LinkedCaseInsensitiveMap();
+                    LinkedCaseInsensitiveMap questions = (LinkedCaseInsensitiveMap) value;
+                    questionsCount.put("topicName", key);
+                    questionsCount.put("correct_questions", questions.get("correct_questions").toString());
+                    questionsCount.put("total_questions", questions.get("total_questions").toString());
+                    questionsCount.put("average", Math.round(((Float.parseFloat(questions.get("correct_questions").toString()) / Float.parseFloat(questions.get("total_questions").toString())) * 100)));
+
+                    candidateTopicWiseScores.add(questionsCount);
+                });
+            }
+            associateTopicScores.put("assessmentId", userAssessment.get("assessment_id").toString());
+            associateTopicScores.put("topicWiseScore", candidateTopicWiseScores);
+        }
+        return associateTopicScores;
+    }
 }

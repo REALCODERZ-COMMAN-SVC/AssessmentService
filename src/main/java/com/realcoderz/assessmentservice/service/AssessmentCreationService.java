@@ -63,4 +63,6 @@ public interface AssessmentCreationService {
 
     public void saveAnswerDetails(Map map);
 
+    public LinkedCaseInsensitiveMap getTopicWiseScoresForAssociates(LinkedCaseInsensitiveMap userAssessments);
+
 }

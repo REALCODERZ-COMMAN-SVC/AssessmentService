@@ -634,24 +634,41 @@ public class AssessmentCreationController {
                     //To Calculate topic wise scores
                     try {
                         List<LinkedCaseInsensitiveMap> assessments = new ArrayList<>();
-                        LinkedCaseInsensitiveMap userIds = new LinkedCaseInsensitiveMap();
-                        userIds.put("assessment_id", userAss.getAssessment_id());
-                        userIds.put("user_assessment_id", userAss.getUser_assessment_id());
-                        userIds.put("total_questions", userAss.getTotal_no_of_questions());
-                        assessments.add(userIds);
-                        new Thread(() -> {
-                            List<LinkedCaseInsensitiveMap> topicWiseScore = assessmentCreationServiceImpl.getTopicWiseScoresForAssociates(userId, assessments);
-                            if (topicWiseScore.size() > 0 && !topicWiseScore.isEmpty()) {
-                                List<AssociateTopicScores> scores = new ArrayList<>();
-                                for (LinkedCaseInsensitiveMap assess : topicWiseScore) {
-                                    List<LinkedCaseInsensitiveMap> topicScore = (List<LinkedCaseInsensitiveMap>) assess.get("topicWiseScore");
-                                    for (LinkedCaseInsensitiveMap topic : topicScore) {
-                                        scores.add(new AssociateTopicScores(userId, Long.parseLong(assess.get("assessmentId").toString()), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
-                                    }
+                        LinkedCaseInsensitiveMap userAssessments = new LinkedCaseInsensitiveMap();
+                        userAssessments.put("assessment_id", userAss.getAssessment_id());
+                        userAssessments.put("user_assessment_id", userAss.getUser_assessment_id());
+                        userAssessments.put("total_questions", userAss.getTotal_no_of_questions());
+                        assessments.add(userAssessments);
+                        LinkedCaseInsensitiveMap topicWiseScores = assessmentCreationService.getTopicWiseScoresForAssociates(userAssessments);
+                        List<AssociateTopicScores> scores = new ArrayList<>();
+                        if (topicWiseScores != null) {
+                            if (topicWiseScores.containsKey("topicWiseScore") && topicWiseScores.get("topicWiseScore") != null) {
+                                List<LinkedCaseInsensitiveMap> topicScores = (List<LinkedCaseInsensitiveMap>) topicWiseScores.get("topicWiseScore");
+                                for (LinkedCaseInsensitiveMap topic : topicScores) {
+                                    scores.add(new AssociateTopicScores(Long.parseLong(map.get("user_id").toString()), userAss.getAssessment_id(), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
                                 }
                                 topicScoresService.saveAll(scores);
                             }
-                        }).start();
+                        }
+//                        List<LinkedCaseInsensitiveMap> assessments = new ArrayList<>();
+//                        LinkedCaseInsensitiveMap userIds = new LinkedCaseInsensitiveMap();
+//                        userIds.put("assessment_id", userAss.getAssessment_id());
+//                        userIds.put("user_assessment_id", userAss.getUser_assessment_id());
+//                        userIds.put("total_questions", userAss.getTotal_no_of_questions());
+//                        assessments.add(userIds);
+//                        new Thread(() -> {
+//                            List<LinkedCaseInsensitiveMap> topicWiseScore = assessmentCreationServiceImpl.getTopicWiseScoresForAssociates(userId, assessments);
+//                            if (topicWiseScore.size() > 0 && !topicWiseScore.isEmpty()) {
+//                                List<AssociateTopicScores> scores = new ArrayList<>();
+//                                for (LinkedCaseInsensitiveMap assess : topicWiseScore) {
+//                                    List<LinkedCaseInsensitiveMap> topicScore = (List<LinkedCaseInsensitiveMap>) assess.get("topicWiseScore");
+//                                    for (LinkedCaseInsensitiveMap topic : topicScore) {
+//                                        scores.add(new AssociateTopicScores(userId, Long.parseLong(assess.get("assessmentId").toString()), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
+//                                    }
+//                                }
+//                                topicScoresService.saveAll(scores);
+//                            }
+//                        }).start();
                     } catch (Exception ex) {
                         logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex);
                     }
@@ -692,7 +709,7 @@ public class AssessmentCreationController {
                     }
                 }
                 resultMap.put("status", "success");
-                logger.info("Assessment successfully saved for LearnerId => "+userId+" :: assessmentId => "+assessmentId);
+                logger.info("Assessment successfully saved for LearnerId => " + userId + " :: assessmentId => " + assessmentId);
             } else {
                 resultMap.put("msg", "Assessment not exist.");
                 resultMap.put("status", "error");
