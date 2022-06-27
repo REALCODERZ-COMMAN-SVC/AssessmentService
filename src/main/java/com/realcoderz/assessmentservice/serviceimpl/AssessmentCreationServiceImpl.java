@@ -549,7 +549,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     Collections.shuffle(options);
                 }
             }
-            qList.put("options", options);
+            qList.put("options_list", options);
             questionListWithOptions.add(qList);
         });
         return questionListWithOptions;
@@ -559,52 +559,28 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId, Long organizationId) {
         LinkedCaseInsensitiveMap resultMap = new LinkedCaseInsensitiveMap();
         if (user_id != null && !"".equalsIgnoreCase(user_id.toString())) {
-
             List<LinkedCaseInsensitiveMap> list = assessmentCreationRepository.getQuizByName(jobportalId);
-
             if (list != null && !list.isEmpty()) {
                 LinkedCaseInsensitiveMap assessment = list.get(0);
-                List<LinkedCaseInsensitiveMap> questionListWithOptions = this.getQuesWithOptByRcAssId(Long.parseLong(assessment.get("assessment_id").toString()));
-                List<LinkedCaseInsensitiveMap> questions = new ArrayList<>();
+                List<LinkedCaseInsensitiveMap> questions = this.getQuesWithOptByRcAssId(Long.parseLong(assessment.get("assessment_id").toString()));
                 LinkedCaseInsensitiveMap result = new LinkedCaseInsensitiveMap();
                 Set topicList = new HashSet<>();
                 result.put("assessment_id", assessment.get("assessment_id"));
                 result.put("assessment_desc", (assessment.get("assessment_desc")));
                 result.put("time", assessment.get("Time"));
-//                result.put("language", assessmentCreationRepository.getLangName(Long.parseLong(assessment.get("language_id").toString())).get("language").toString());
-                questionListWithOptions.stream().forEach(que -> {
-                    LinkedCaseInsensitiveMap quest = new LinkedCaseInsensitiveMap();
+                result.put("language", assessmentCreationRepository.getLangName(Long.parseLong(assessment.get("language_id").toString())).get("language").toString());
+                questions.stream().forEach(que -> {
                     LinkedCaseInsensitiveMap topics = new LinkedCaseInsensitiveMap();
-                    quest.put("shuffle", que.get("shuffle"));
-                    quest.put("question_id", que.get("question_id"));
-                    quest.put("question_type_id", que.get("question_type_id"));
-                    quest.put("question_desc", que.get("question_desc"));
-                    quest.put("codingTemplate", que.get("coding_template"));
-                    quest.put("no_of_answer", que.get("no_of_answer"));
-                    quest.put("topic_id", que.get("topic_id"));
-                    quest.put("topic_Name", assessmentCreationRepository.topicNameById(Long.parseLong(que.get("topic_id").toString())));
                     topics.put("topic_id", que.get("topic_id"));
-                    topics.put("topic_Name", assessmentCreationRepository.topicNameById(Long.parseLong(que.get("topic_id").toString())));
+                    topics.put("topic_Name", que.get("topic_name").toString());
                     topics.put("count_no_of_question", assessmentCreationRepository.countNoOfQuestion(Long.parseLong(que.get("topic_id").toString()), organizationId, Long.parseLong(assessment.get("assessment_id").toString())));
                     topicList.add(topics);
-//                    List<LinkedCaseInsensitiveMap> options = new ArrayList<>();
-//                    if (que.get("options") != null) {
-//                        que.getOptions_list().stream().forEach(opt -> {
-//                            LinkedCaseInsensitiveMap option = new LinkedCaseInsensitiveMap();
-//                            option.put("option_id", opt.getOption_id());
-//                            option.put("option_desc", opt.getOption_desc());
-//                            options.add(option);
-//                        });
-//                    }
-//                    Collections.shuffle(options);
-                    quest.put("options_list", que.get("options"));
-                    questions.add(quest);
                 });
                 Timer timer = new Timer("Assessment_Timer_For_" + user_id + "+" + assessment.get("assessment_id").toString());
                 final Long userId = user_id;
                 final Long assessmentId = Long.parseLong(assessment.get("assessment_id").toString());
                 final Date startTime = new Date();
-                final Integer totalQue = questionListWithOptions.size();
+                final Integer totalQue = questions.size();
                 final AssessmentCreation stdntAssessment = assessmentCreationRepository.findById(assessmentId).get();
 
                 TimerTask task = new TimerTask() {
@@ -628,9 +604,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             assessment.setCorrect_questions(0);
                             assessment.setRemarks("Window closed forcefully");
                             assessment.setCreatedBy(userId.toString());
-
                             assessment.setLastModifiedBy(userId.toString());
-
                             List<LinkedCaseInsensitiveMap> selectedQuestions = studentAnswerTrackRepository.findByStudentIdAndAssessmentId(userId, assessmentId);
                             questionList.stream().forEach(question -> {
                                 Optional<LinkedCaseInsensitiveMap> present = selectedQuestions.stream().filter(sq -> sq.get("questionId").toString().equalsIgnoreCase(question.getQuestion_id().toString())).findFirst();
@@ -732,13 +706,10 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     }
                 };
                 timer.schedule(task, ((Integer.parseInt(assessment.get("time").toString()) + 1) * 60 * 1000));
-                List question1 = questions.stream().filter(que -> que.get("shuffle").toString().equalsIgnoreCase("y")).collect(Collectors.toList());
-                Collections.shuffle(question1);
-                List question2 = questions.stream().filter(que -> que.get("shuffle").toString().equalsIgnoreCase("n")).collect(Collectors.toList());
-                question1.addAll(question2);
-                result.put("question_list", question1);
+                Collections.shuffle(questions);
+                result.put("question_list", questions);
                 result.put("topic_list", topicList);
-                result.put("topic_wise_question", question1);
+                result.put("topic_wise_question", questions);
                 resultMap.put("assessment", result);
                 resultMap.put("status", "success");
             }
@@ -760,52 +731,49 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     public CompletableFuture<LinkedCaseInsensitiveMap> saveAssessment(Map map) {
         LinkedCaseInsensitiveMap result = new LinkedCaseInsensitiveMap();
         result.put("status", "success");
-        Map assessmentData = (Map) map.get("assessment");
-        String status = "false";
+//        String status = "false";
         String remarks = null;
-
         if (map.containsKey("remarks") && map.get("remarks") != null) {
             remarks = map.get("remarks").toString();
         }
         int counter = Integer.parseInt(map.get("counter").toString());
         Long jobPortalId = Long.parseLong(map.get("jobPortalId").toString());
-        Long rcAssId = Long.parseLong(assessmentData.get("assessment_id").toString());
-        List<LinkedCaseInsensitiveMap> questWithOpt = this.getQuesWithOptByRcAssId(rcAssId);
-        if (questWithOpt != null && !questWithOpt.isEmpty()) {
+        Long assessmentId = Long.parseLong(map.get("assessmentId").toString()) ;
+        Long studentId = Long.parseLong(map.get("user_id").toString());
+        List<LinkedCaseInsensitiveMap> questWithOptions = this.getQuesWithOptByRcAssId(assessmentId);
+        if (questWithOptions != null && !questWithOptions.isEmpty()) {
             StudentAssessment studentAssessment = new StudentAssessment();
             Set<StudentAssessmentDetails> detailList = new HashSet<>();
-            List<LinkedHashMap> selectedQuestions = (List<LinkedHashMap>) assessmentData.get("question_list");
-            studentAssessment.setStudent_id(Long.parseLong(map.get("user_id").toString()));
-            studentAssessment.setAssessment_id(rcAssId);
+//            List<LinkedHashMap> selectedQuestions = (List<LinkedHashMap>) assessmentData.get("question_list");
+            List<LinkedCaseInsensitiveMap> selectedQuestions = studentAnswerTrackRepository.findByStudentIdAndAssessmentId(studentId, assessmentId);
+            studentAssessment.setStudent_id(studentId);
+            studentAssessment.setAssessment_id(assessmentId);
             studentAssessment.setStartTime(null);
             studentAssessment.setEndTime(new Date());
             studentAssessment.setCreatedBy(map.get("user_id").toString());
             studentAssessment.setCreatedDate(new Date());
             studentAssessment.setJobPortalId(jobPortalId);
-
             if (remarks != null) {
                 studentAssessment.setRemarks(remarks);
             } else {
                 studentAssessment.setRemarks(counter == 4 ? "Assessment submitted automatically, as user exceeded the window switch limit." : "Tried to switch window for " + counter + " " + "times");
             }
 //                assessmentDetailsRepo.updateAssessmentCompleted(Long.parseLong(map.get("user_id").toString()), assessment.getRcassessment_id());
-            questWithOpt.stream().forEach(question -> {
-                Optional<LinkedHashMap> present = selectedQuestions.stream().filter(sq -> sq.get("question_id").toString().equalsIgnoreCase(question.get("question_id").toString())).findFirst();
-                if (present.isPresent()) {
-                    StudentAssessmentDetails details = new StudentAssessmentDetails();
-                    List<LinkedHashMap> options = (List<LinkedHashMap>) ((LinkedHashMap) present.get()).get("options_list");
-                    List<LinkedHashMap> selectedOptions = options.stream().filter(op -> op.containsKey("isAnswer") && "Y".equalsIgnoreCase(op.get("isAnswer").toString())).collect(Collectors.toList());
-                    String answer = selectedOptions.stream().map(s -> s.get("option_id").toString()).collect(Collectors.joining(","));
-                    details.setStudentAssessment(studentAssessment);
-                    details.setQuestion_id(Long.parseLong(question.get("question_id").toString()));
-                    details.setAnswer(answer);
-                    details.setCreatedBy(map.get("user_id").toString());
-                    details.setCreatedDate(new Date());
-                    detailList.add(details);
+            questWithOptions.stream().forEach(question -> {
+                LinkedCaseInsensitiveMap questionWithAns = selectedQuestions.stream().filter(sq -> sq.get("questionId").toString().equalsIgnoreCase(question.get("question_id").toString())).findFirst().get();
+                StudentAssessmentDetails details = new StudentAssessmentDetails();
+                details.setStudentAssessment(studentAssessment);
+                details.setQuestion_id(Long.parseLong(question.get("question_id").toString()));
+                if (questionWithAns!=null) {
+                    details.setAnswer(questionWithAns.get("answer").toString());
+                } else {
+                    details.setAnswer("");
                 }
+                detailList.add(details);
             });
             studentAssessment.setDetail_list(detailList);
-            this.save(studentAssessment);
+            save(studentAssessment);
+            studentAnswerTrackRepository.deleteByStudentId(studentId);
             Map calResult = calculateResult(studentAssessment.getStudent_id(), studentAssessment.getAssessment_id());
             int totalMcq = Integer.parseInt(calResult.get("totalNoOfQuestion").toString() != null ? calResult.get("totalNoOfQuestion").toString() : "0");
             int totalMcqScore = Integer.parseInt(calResult.get("correctQuestion").toString() != null ? calResult.get("correctQuestion").toString() : "0");
@@ -909,7 +877,6 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 ant.setStudentId(Long.parseLong(map.get("uid").toString()));
                 ant.setQuestionId(Long.parseLong(map.get("qid").toString()));
                 ant.setAnswer(Long.parseLong(map.get("answer").toString()));
-
                 studentAnswerTrackRepository.save(ant);
             } else {
                 assAnsTrack.setAnswer(Long.parseLong(map.get("answer").toString()));
@@ -933,7 +900,6 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     associateTopicScores.put("haveCoding", 1);
                 }
                 if (!associatesQuestionStatus.isEmpty() && associatesQuestionStatus.size() > 0) {
-
                     associatesQuestionStatus.stream().forEach(data -> {
                         if (!topicWiseScores.containsKey(data.get("topic_name").toString())) {
                             LinkedCaseInsensitiveMap topicCount = new LinkedCaseInsensitiveMap();
