@@ -793,8 +793,7 @@ public class AssessmentCreationController {
     }
 
     @PostMapping(path = "/stdntquiz")
-    public Map getQuiz(@RequestBody String data
-    ) {
+    public Map getQuiz(@RequestBody String data) {
         logger.info("AssessmentCreationController -> getQuiz() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
@@ -818,11 +817,10 @@ public class AssessmentCreationController {
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             map.put("accessToken", request.getHeader("Authorization"));
-            Map assessmentData = ((map.containsKey("assessment") && map.get("assessment") != null) ? (Map) map.get("assessment") : null);
-            if (assessmentData != null) {
+            Long assessmentId = ((map.containsKey("assessmentId") && map.get("assessmentId") != null) ? Long.parseLong(map.get("assessmentId").toString())  : 0);
+            if (assessmentId > 0) {
                 resultMap.put("status", "success");
                 assessmentCreationService.saveAssessment(map);
-
             } else {
                 resultMap.put("msg", "Nothing to save.");
                 resultMap.put("status", "error");

@@ -39,7 +39,7 @@ public interface QuestionMasterRepository extends JpaRepository<QuestionMaster, 
     @Query("SELECT qm.question_id as question_id,qm.questionTime as questionTime,qm.language_id as language_id,qm.difficulty_id as difficulty_id,qm.question_type_id as question_type_id,qm.no_of_answer as no_of_answer,qm.question_desc as question_desc,qm.active as active,qm.parameterForTestCases as parameterForTestCases,qm.expectedOutput as expectedOutput,ol.option_id as option_id,ol.option_desc as option_desc,ol.isActive as isActive  FROM QuestionMaster qm JOIN qm.options_list ol where qm.question_id=:id order by ol.option_id")
     public List<LinkedCaseInsensitiveMap> getMcqQues(@Param("id") Long id);
 
-    @Query(nativeQuery = true, value = "select qm.topic_id, qm.shuffle as shuffle , qm.question_id,qm.question_type_id,qm.question_desc,qm.coding_template,qm.no_of_answer,qm.language_id from assessment_question rcq,question_master qm where rcq.assessment_id=?1 and qm.question_id=rcq.question_id")
+    @Query(nativeQuery = true, value = "select qm.topic_id,tm.topic_name, qm.shuffle as shuffle , qm.question_id,qm.question_type_id,qm.question_desc,qm.coding_template,qm.no_of_answer,qm.language_id from assessment_question rcq,question_master qm,topic_master tm where tm.topic_id=qm.topic_id AND qm.active='Y' AND qm.question_id=rcq.question_id and rcq.assessment_id=?1")
     public List<LinkedCaseInsensitiveMap> findByRcAssId(Long rcAssId);
 
     @Query(nativeQuery = true, value = "SELECT  qm.question_id as question_id,qm.difficulty_id as difficulty_id,qm.language_id as language_id  , qm.topic_id as topic_id from assessment_question aq inner join question_master qm on qm.question_id=aq.question_id Where (aq.assessment_id=:assessmentId)")
