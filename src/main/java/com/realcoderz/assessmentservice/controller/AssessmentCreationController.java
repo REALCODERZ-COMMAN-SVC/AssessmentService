@@ -820,6 +820,7 @@ public class AssessmentCreationController {
             Long assessmentId = ((map.containsKey("assessmentId") && map.get("assessmentId") != null) ? Long.parseLong(map.get("assessmentId").toString())  : 0);
             if (assessmentId > 0) {
                 resultMap.put("status", "success");
+                assessmentCreationService.saveStudentFeedBack(map);
                 assessmentCreationService.saveAssessment(map);
             } else {
                 resultMap.put("msg", "Nothing to save.");

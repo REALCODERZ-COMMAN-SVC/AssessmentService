@@ -85,7 +85,7 @@ public interface AssessmentCreationRepository extends JpaRepository<AssessmentCr
 
 //    @Query(nativeQuery = true, value = "SELECT count(*) as count FROM question_master qm, language_master lm where question_id in ( SELECT question_id FROM assessment_question  where assessment_id=:assessment_id and qm.organization_id=:organizationId) and qm.organization_id=:organizationId and lm.language_id=qm.language_id and lm.language_id=:language_id")
 //    @Query(nativeQuery = true, value = "SELECT count(*) FROM question_master where topic_id=:topic_id and organization_id=:organizationId")
-    @Query(nativeQuery = true, value = "SELECT count(*) as count FROM question_master qm, topic_master tm where question_id in ( SELECT question_id FROM assessment_question  where assessment_id=:assessment_id and qm.organization_id=:organizationId) and qm.organization_id=:organizationId and tm.topic_id=qm.topic_id and tm.topic_id=:language_id")
+    @Query(nativeQuery = true, value = "SELECT count(*) as count FROM question_master qm, topic_master tm where question_id in ( SELECT question_id FROM assessment_question  where assessment_id=:assessment_id and qm.organization_id=:organizationId) and qm.organization_id=:organizationId and tm.topic_id=qm.topic_id and tm.topic_id=:language_id and qm.active='Y'")
     public String countNoOfQuestion(@Param("language_id") Long topic_id, @Param("organizationId") Long organizationId, @Param("assessment_id") Long assessment_id);
 
     @Query(nativeQuery = true, value = "select topic_name from topic_master where topic_id=:topic_id")
