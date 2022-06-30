@@ -65,4 +65,6 @@ public interface AssessmentCreationService {
 
     public Map getAssociateTopicScores(Map map);
 
+    public void saveStudentFeedBack(Map map);
+
 }

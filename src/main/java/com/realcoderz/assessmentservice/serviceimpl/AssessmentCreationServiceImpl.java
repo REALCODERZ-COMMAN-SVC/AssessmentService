@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedCaseInsensitiveMap;
@@ -724,8 +725,39 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     private StudentAssessment save(StudentAssessment studentAssessment) {
         return studentAssessmentRepo.save(studentAssessment);
     }
-    //Student Assessment
+    //Save Student FeedBack
+    @Override
+    public void saveStudentFeedBack(Map map){
+            //Save Student Feedback
+            StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
+            stdntFdbck.setStatus("Assessment Completed");
+            stdntFdbck.setScholarship("In Process");
+            Long no_of_round = stdntFdbckrepo.getInterviewRounds(Long.parseLong(map.get("user_id").toString()));
+            if (no_of_round == Long.parseLong("1")) {
+                stdntFdbck.setProgress_percentage(Long.parseLong("50"));
+            } else if (no_of_round == Long.parseLong("3")) {
+                stdntFdbck.setProgress_percentage(Long.parseLong("20"));
+            } else {
+                stdntFdbck.setProgress_percentage(Long.parseLong("25"));
 
+            }
+            stdntFdbck.setStudent_id(Long.parseLong(map.get("user_id").toString()));
+            stdntFdbck.setScholarship("In Process");
+            stdntFdbck.setCreatedDate(new Date());
+            stdntFdbck.setCreatedBy(map.get("user_id").toString());
+            stdntFdbck.setLastModifiedBy(map.get("user_id").toString());
+            stdntFdbck.setLastModifiedDate(new Date());
+            stdntFdbck.setJob_portal_id(Long.parseLong(map.get("jobPortalId").toString()));
+            if (map.containsKey("organization_name") && map.get("organization_name") != null) {
+                Long organizationId = stdntFdbckrepo.findOrganizationIdByName(map.get("organization_name").toString());
+                if (organizationId != null) {
+                    stdntFdbck.setOrganizationId(organizationId);
+                }
+            }
+            stdntFdbckrepo.save(stdntFdbck);
+    }
+    
+    //Save Student Assessment
     @Override
     @Transactional
     public CompletableFuture<LinkedCaseInsensitiveMap> saveAssessment(Map map) {
@@ -738,7 +770,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         int counter = Integer.parseInt(map.get("counter").toString());
         Long jobPortalId = Long.parseLong(map.get("jobPortalId").toString());
-        Long assessmentId = Long.parseLong(map.get("assessmentId").toString()) ;
+        Long assessmentId = Long.parseLong(map.get("assessmentId").toString());
         Long studentId = Long.parseLong(map.get("user_id").toString());
         List<LinkedCaseInsensitiveMap> questWithOptions = this.getQuesWithOptByRcAssId(assessmentId);
         if (questWithOptions != null && !questWithOptions.isEmpty()) {
@@ -760,12 +792,13 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             }
 //                assessmentDetailsRepo.updateAssessmentCompleted(Long.parseLong(map.get("user_id").toString()), assessment.getRcassessment_id());
             questWithOptions.stream().forEach(question -> {
-                LinkedCaseInsensitiveMap questionWithAns = selectedQuestions.stream().filter(sq -> sq.get("questionId").toString().equalsIgnoreCase(question.get("question_id").toString())).findFirst().get();
+                Optional<LinkedCaseInsensitiveMap> present = selectedQuestions.stream().filter(sq -> sq.get("questionId").toString().equalsIgnoreCase(question.get("question_id").toString())).findFirst();
                 StudentAssessmentDetails details = new StudentAssessmentDetails();
                 details.setStudentAssessment(studentAssessment);
                 details.setQuestion_id(Long.parseLong(question.get("question_id").toString()));
-                if (questionWithAns!=null) {
-                    details.setAnswer(questionWithAns.get("answer").toString());
+                if (present.isPresent()) {
+                    String answer = present.get().get("answer").toString();
+                    details.setAnswer(answer);
                 } else {
                     details.setAnswer("");
                 }
@@ -786,33 +819,6 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 studentAssessment.setTotalPercentage(mcqPercentage);
             }
             StudentAssessment stAssess = save(studentAssessment);
-//Save Student Feedback
-            StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
-            stdntFdbck.setStatus("Assessment Completed");
-            stdntFdbck.setScholarship("In Process");
-            Long no_of_round = stdntFdbckrepo.getInterviewRounds(Long.parseLong(map.get("user_id").toString()));
-            if (no_of_round == Long.parseLong("1")) {
-                stdntFdbck.setProgress_percentage(Long.parseLong("50"));
-            } else if (no_of_round == Long.parseLong("3")) {
-                stdntFdbck.setProgress_percentage(Long.parseLong("20"));
-            } else {
-                stdntFdbck.setProgress_percentage(Long.parseLong("25"));
-
-            }
-            stdntFdbck.setStudent_id(Long.parseLong(map.get("user_id").toString()));
-            stdntFdbck.setScholarship("In Process");
-            stdntFdbck.setCreatedDate(new Date());
-            stdntFdbck.setCreatedBy(map.get("user_id").toString());
-            stdntFdbck.setLastModifiedBy(map.get("user_id").toString());
-            stdntFdbck.setLastModifiedDate(new Date());
-            stdntFdbck.setJob_portal_id(jobPortalId);
-            if (map.containsKey("organization_name") && map.get("organization_name") != null) {
-                Long organizationId = stdntFdbckrepo.findOrganizationIdByName(map.get("organization_name").toString());
-                if (organizationId != null) {
-                    stdntFdbck.setOrganizationId(organizationId);
-                }
-            }
-            stdntFdbckrepo.save(stdntFdbck);
             //save topic wise scores
             try {
                 LinkedCaseInsensitiveMap assess = new LinkedCaseInsensitiveMap();
