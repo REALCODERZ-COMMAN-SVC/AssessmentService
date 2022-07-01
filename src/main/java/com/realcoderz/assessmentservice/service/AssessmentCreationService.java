@@ -7,6 +7,7 @@ package com.realcoderz.assessmentservice.service;
 
 import com.realcoderz.assessmentservice.domain.AssessmentCreation;
 import com.realcoderz.assessmentservice.domain.QuestionMaster;
+import com.realcoderz.assessmentservice.exceptions.InvalidKey;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,7 +56,7 @@ public interface AssessmentCreationService {
 
     public Map getAssessmentByBatchAssociateId(Long batchId, Long userId);
 
-    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId,Long organizationId);
+    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId, Long organizationId);
 
     public CompletableFuture<LinkedCaseInsensitiveMap> saveAssessment(Map map);
 
@@ -67,4 +68,15 @@ public interface AssessmentCreationService {
 
     public void saveStudentFeedBack(Map map);
 
+    public Map getCodingQuestion(String data) throws NullPointerException;
+
+    public Map saveAssessmentCodingDetails(String data) throws InvalidKey;
+
+    public Map getCodingDetailsBasedOnAssId(String data);
+
+    public Map<String, Object> saveTextAssessment(Map<String, Object> map);
+
+    public Map<String, Object> getTextAnswer(Map map);
+
+    public LinkedCaseInsensitiveMap getResultByUserId(Map map);
 }

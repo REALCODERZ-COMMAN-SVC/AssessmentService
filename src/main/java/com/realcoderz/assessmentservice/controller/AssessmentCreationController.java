@@ -18,6 +18,7 @@ import com.realcoderz.assessmentservice.domain.UserMaster;
 import com.realcoderz.assessmentservice.exceptions.EntiryNotFoundException;
 import com.realcoderz.assessmentservice.payload.SwaggerController.AssessmentCreationControllerPayload;
 import com.realcoderz.assessmentservice.payload.SwaggerController.RCAssessmentCreationControllerPayload;
+import com.realcoderz.assessmentservice.payload.SwaggerController.StudentAssessmentControllerPayload;
 import com.realcoderz.assessmentservice.repository.AssessmentCreationRepository;
 import com.realcoderz.assessmentservice.repository.AssociateAnswerTrackRepository;
 import com.realcoderz.assessmentservice.repository.AssociateValidateRepository;
@@ -817,7 +818,7 @@ public class AssessmentCreationController {
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             map.put("accessToken", request.getHeader("Authorization"));
-            Long assessmentId = ((map.containsKey("assessmentId") && map.get("assessmentId") != null) ? Long.parseLong(map.get("assessmentId").toString())  : 0);
+            Long assessmentId = ((map.containsKey("assessmentId") && map.get("assessmentId") != null) ? Long.parseLong(map.get("assessmentId").toString()) : 0);
             if (assessmentId > 0) {
                 resultMap.put("status", "success");
                 assessmentCreationService.saveStudentFeedBack(map);
@@ -918,4 +919,69 @@ public class AssessmentCreationController {
         return resultMap;
     }
 
+    @ApiOperation(value = "save text assessment", response = StudentAssessmentControllerPayload.class)
+    @PostMapping(path = "/savetext", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public Map saveTextAssessment(@RequestBody String data) {
+        Map resultMap = new HashMap<>();
+        try {
+            logger.info("StudentAssessmentController -> saveTextAssessment() ::  Method execution start");
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("StudentAssessmentController -> saveTextAssessment() ::  Method execution start with request data : " + map);
+            Map assessmentData = ((map.containsKey("assessment") && map.get("assessment") != null) ? (Map) map.get("assessment") : null);
+            if (assessmentData != null) {
+                resultMap = assessmentCreationService.saveTextAssessment(map);
+            } else {
+                resultMap.put("msg", "Nothing to save.");
+                resultMap.put("status", "error");
+            }
+        } catch (IOException ex) {
+            logger.error("Problem in StudentAssessmentController -> saveTextAssessment() :: ", ex);
+        }
+        logger.info("StudentAssessmentController -> saveTextAssessment() ::  Method execution complete with response data :: " + resultMap);
+
+        return resultMap;
+    }
+
+    @ApiOperation(value = "get text answer", response = StudentAssessmentControllerPayload.class)
+    @PostMapping(path = "/gettext", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public Map getTextAnswer(@RequestBody String data) {
+        logger.info("StudentAssessmentController -> getTextAnswer() ::  Method execution start");
+        Map resultMap = new HashMap<>();
+        try {
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("StudentAssessmentController -> getTextAnswer() :: request data :: " + map);
+            if (map.containsKey("assessment_id") && map.get("assessment_id") != null) {
+                resultMap = assessmentCreationService.getTextAnswer(map);
+            } else {
+                resultMap.put("msg", "Nothing to save.");
+                resultMap.put("status", "error");
+                logger.info("StudentAssessmentController -> getTextAnswer() ::  Nothing to save");
+
+            }
+        } catch (IOException ex) {
+            logger.error("Problem in StudentAssessmentController -> getTextAnswer() :: ", ex);
+        }
+        logger.info("StudentAssessmentController -> getTextAnswer() ::  Response data :: " + resultMap);
+        logger.info("StudentAssessmentController -> getTextAnswer() ::  Method execution completed");
+
+        return resultMap;
+    }
+
+    @ApiOperation(value = "get result", response = StudentAssessmentControllerPayload.class)
+    @PostMapping(path = "/getresult", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public Map findResult(@RequestBody String data) {
+        Map resultMap = new HashMap();
+        try {
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> findResult() ::  Method execution start with request data : " + map);
+            resultMap = assessmentCreationService.getResultByUserId(map);
+        } catch (IOException ex) {
+            logger.error("Problem in AssessmentCreationController -> findResult() :: ", ex);
+            resultMap.clear();
+            resultMap.put("status", "exception");
+            logger.error("AssessmentCreationController -> findResult() :: Exception Occured !! ", ex);
+        }
+        logger.info("AssessmentCreationController -> findResult() ::  Method execution complete with response data : " + resultMap);
+        return resultMap;
+    }
 }

@@ -23,7 +23,7 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
 public interface AssessmentCreationRepository extends JpaRepository<AssessmentCreation, Long> {
 
     @Query(nativeQuery = true, value = "SELECT qm.question_id from question_master qm where qm.language_id=:language_id and qm.difficulty_id=:difficulty_id and qm.topic_id=:topic_id and qm.question_type_id=:questionTypeId  order by rand() limit :selectedQuestion")
-    public List<Long> getRandomQuestions(@Param("language_id") Long language_id,@Param("difficulty_id") Long difficulty_id,@Param("topic_id") Long topic_id, @Param("questionTypeId") Long questionTypeId, @Param("selectedQuestion") Integer selectedQuestion);
+    public List<Long> getRandomQuestions(@Param("language_id") Long language_id, @Param("difficulty_id") Long difficulty_id, @Param("topic_id") Long topic_id, @Param("questionTypeId") Long questionTypeId, @Param("selectedQuestion") Integer selectedQuestion);
 
     @Query("from QuestionMaster where question_id in :ids ")
     public Set<QuestionMaster> findByIds(@Param("ids") List<Long> ids);
@@ -93,5 +93,14 @@ public interface AssessmentCreationRepository extends JpaRepository<AssessmentCr
 
     @Query("select ac.assessment_id as assessment_id,ac.assessmentTimeBound as assessmentTimeBound, ac.assessment_desc as assessment_desc, bm.batch_name as batch_name,ac.creation_type as creation_type From AssessmentCreation ac INNER JOIN BatchAssessmentMapping bam  ON bam.assessment_id=ac.assessment_id INNER JOIN BatchMaster bm on bm.batch_id=bam.batch_id ")
     public List<LinkedCaseInsensitiveMap> assessments();
+
+    @Query("select codingmarks_id from AssessmentCreation where assessment_id=:assessment_id")
+    public Long findCodingMarksIdByAssessmentId(@Param("assessment_id") Long assessment_id);
+
+    @Query("select ac.codingmarks_id as codingmarks_id,ac.assessment_desc as assessment_desc,ac.language_id as language_id FROM AssessmentCreation ac where ac.assessment_id=:assessment_id")
+    public LinkedCaseInsensitiveMap findByAssessmentId(@Param("assessment_id") Long assessment_id);
+
+    @Query(nativeQuery = true, value = "select aq.question_id from assessment_question aq,question_master qm where aq.rcassessment_id=:assessment_id and qm.question_id=aq.question_id and qm.question_type_id=2")
+    public List<Long> findQuestionIdByAssessmentId(@Param("assessment_id") Long assessment_id);
 
 }

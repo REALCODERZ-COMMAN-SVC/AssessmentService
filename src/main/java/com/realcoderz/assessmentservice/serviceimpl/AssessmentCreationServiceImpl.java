@@ -5,8 +5,13 @@
  */
 package com.realcoderz.assessmentservice.serviceimpl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.realcoderz.assessmentservice.domain.AssessmentCodingDetails;
+import com.realcoderz.assessmentservice.domain.AssessmentCodingMarks;
 import com.realcoderz.assessmentservice.domain.AssessmentCreation;
+import com.realcoderz.assessmentservice.domain.AssessmentTextDetails;
 import com.realcoderz.assessmentservice.domain.CandidateStatus;
+import com.realcoderz.assessmentservice.domain.CodingQuestionTestCases;
 import com.realcoderz.assessmentservice.domain.LanguageMaster;
 import com.realcoderz.assessmentservice.domain.QuestionMaster;
 import com.realcoderz.assessmentservice.domain.StudentAnswerTrack;
@@ -16,8 +21,13 @@ import com.realcoderz.assessmentservice.domain.StudentInterviewFeedBack;
 import com.realcoderz.assessmentservice.domain.StudentMaster;
 import com.realcoderz.assessmentservice.domain.StudentTopicScores;
 import com.realcoderz.assessmentservice.exceptions.EntiryNotFoundException;
+import com.realcoderz.assessmentservice.exceptions.InvalidKey;
+import com.realcoderz.assessmentservice.repository.AssessmentCodingDetailsRepository;
+import com.realcoderz.assessmentservice.repository.AssessmentCodingMarksRepository;
 import com.realcoderz.assessmentservice.repository.AssessmentCreationRepository;
+import com.realcoderz.assessmentservice.repository.AssessmentTextDetailsRepository;
 import com.realcoderz.assessmentservice.repository.CandidateStatusRepository;
+import com.realcoderz.assessmentservice.repository.CodingQuestionTestCaseRepository;
 import com.realcoderz.assessmentservice.repository.LanguageMasterRepository;
 import com.realcoderz.assessmentservice.repository.QuestionMasterRepository;
 import com.realcoderz.assessmentservice.repository.QuestionOptionMappingRepository;
@@ -29,7 +39,12 @@ import com.realcoderz.assessmentservice.repository.StudentTopicScoresRepo;
 import com.realcoderz.assessmentservice.repository.UserMasterRepository;
 import com.realcoderz.assessmentservice.service.AssessmentCreationService;
 import com.realcoderz.assessmentservice.service.StudentAssessmentService;
+import com.realcoderz.assessmentservice.service.StudentFeedbackService;
+import com.realcoderz.assessmentservice.util.CommonCompiler;
+import com.realcoderz.assessmentservice.util.EncryptDecryptUtils;
+import java.io.IOException;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,7 +64,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedCaseInsensitiveMap;
@@ -101,6 +116,26 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
 
     @Autowired
     private StudentInterviewFeedbackRepository stdntFdbckrepo;
+
+    @Autowired
+    private CodingQuestionTestCaseRepository testCaseRepo;
+
+    @Autowired
+    AssessmentCodingMarksRepository codeMarksRepository;
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    @Value("${compiler_url}")
+    private String compilerUrl;
+
+    @Autowired
+    private StudentFeedbackService studentFeedBackService;
+
+    @Autowired
+    AssessmentTextDetailsRepository assessmentDetailsRepo;
+
+    @Autowired
+    AssessmentCodingDetailsRepository codeDetailsRepository;
 
     @Override
     public Map add(Map map) {
@@ -725,38 +760,39 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     private StudentAssessment save(StudentAssessment studentAssessment) {
         return studentAssessmentRepo.save(studentAssessment);
     }
+
     //Save Student FeedBack
     @Override
-    public void saveStudentFeedBack(Map map){
-            //Save Student Feedback
-            StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
-            stdntFdbck.setStatus("Assessment Completed");
-            stdntFdbck.setScholarship("In Process");
-            Long no_of_round = stdntFdbckrepo.getInterviewRounds(Long.parseLong(map.get("user_id").toString()));
-            if (no_of_round == Long.parseLong("1")) {
-                stdntFdbck.setProgress_percentage(Long.parseLong("50"));
-            } else if (no_of_round == Long.parseLong("3")) {
-                stdntFdbck.setProgress_percentage(Long.parseLong("20"));
-            } else {
-                stdntFdbck.setProgress_percentage(Long.parseLong("25"));
+    public void saveStudentFeedBack(Map map) {
+        //Save Student Feedback
+        StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
+        stdntFdbck.setStatus("Assessment Completed");
+        stdntFdbck.setScholarship("In Process");
+        Long no_of_round = stdntFdbckrepo.getInterviewRounds(Long.parseLong(map.get("user_id").toString()));
+        if (no_of_round == Long.parseLong("1")) {
+            stdntFdbck.setProgress_percentage(Long.parseLong("50"));
+        } else if (no_of_round == Long.parseLong("3")) {
+            stdntFdbck.setProgress_percentage(Long.parseLong("20"));
+        } else {
+            stdntFdbck.setProgress_percentage(Long.parseLong("25"));
 
+        }
+        stdntFdbck.setStudent_id(Long.parseLong(map.get("user_id").toString()));
+        stdntFdbck.setScholarship("In Process");
+        stdntFdbck.setCreatedDate(new Date());
+        stdntFdbck.setCreatedBy(map.get("user_id").toString());
+        stdntFdbck.setLastModifiedBy(map.get("user_id").toString());
+        stdntFdbck.setLastModifiedDate(new Date());
+        stdntFdbck.setJob_portal_id(Long.parseLong(map.get("jobPortalId").toString()));
+        if (map.containsKey("organization_name") && map.get("organization_name") != null) {
+            Long organizationId = stdntFdbckrepo.findOrganizationIdByName(map.get("organization_name").toString());
+            if (organizationId != null) {
+                stdntFdbck.setOrganizationId(organizationId);
             }
-            stdntFdbck.setStudent_id(Long.parseLong(map.get("user_id").toString()));
-            stdntFdbck.setScholarship("In Process");
-            stdntFdbck.setCreatedDate(new Date());
-            stdntFdbck.setCreatedBy(map.get("user_id").toString());
-            stdntFdbck.setLastModifiedBy(map.get("user_id").toString());
-            stdntFdbck.setLastModifiedDate(new Date());
-            stdntFdbck.setJob_portal_id(Long.parseLong(map.get("jobPortalId").toString()));
-            if (map.containsKey("organization_name") && map.get("organization_name") != null) {
-                Long organizationId = stdntFdbckrepo.findOrganizationIdByName(map.get("organization_name").toString());
-                if (organizationId != null) {
-                    stdntFdbck.setOrganizationId(organizationId);
-                }
-            }
-            stdntFdbckrepo.save(stdntFdbck);
+        }
+        stdntFdbckrepo.save(stdntFdbck);
     }
-    
+
     //Save Student Assessment
     @Override
     @Transactional
@@ -1008,5 +1044,327 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     @Override
     public void saveRanAssess(Map map) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Map getCodingQuestion(String data) throws NullPointerException {
+        logger.info("StudentAssessmentService getCodingQuestion :: Method execution started.");
+        Map resultMap = new HashMap<>();
+
+        try {
+            Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("StudentAssessmentServiceImpl->getCodingQuestion() with request data :: " + map);
+            List<LinkedCaseInsensitiveMap> list = null;
+            if (map.get("student_email") != null ? true : false) {
+                String email = map.get("student_email") != null ? map.get("student_email").toString() : "";
+                Long organizationId = map.get("organizationId") != null ? Long.parseLong(map.get("organizationId").toString()) : 0l;
+                if (email.length() > 0) {
+                    Long assessmentId = null;
+                    Long studentId = studentMasterRepository.findByEmailAndOrgId(email, organizationId);
+                    if (studentId != null) {
+                        assessmentId = studentAssessmentRepo.findByStudentIdAndOrg(studentId, organizationId);
+                        if (assessmentId != null) {
+                            resultMap.put("coding", testCaseRepo.getCodingQuestion(assessmentId, organizationId));
+                        }
+                    } else {
+                        resultMap.put("status", "student not exist");
+                        throw new NullPointerException("Student Id Not exist .");
+                    }
+                    resultMap.put("status", "success");
+                } else {
+                    resultMap.put("status", "Please provide student email");
+                    logger.info("StudentAssessmentServiceImpl->getCodingQuestion() :: Please provide student email");
+                    throw new NullPointerException("Email not exist .");
+                }
+            }
+        } catch (IOException io) {
+            resultMap.clear();
+            resultMap.put("status", "Input formate exception");
+            logger.info("StudentAssessmentServiceImpl->getCodingQuestion() :: Input formate exception" + io);
+        } catch (Exception e) {
+            e.printStackTrace();
+            resultMap.clear();
+            resultMap.put("status", "exception Occured");
+            logger.info("Exception Occured");
+        }
+        logger.info("StudentAssessmentServiceImpl->getCodingQuestion()" + resultMap);
+        logger.info("StudentAssessmentService getCodingQuestion :: Method execution completed.");
+        return resultMap;
+    }
+
+    @Override
+    public Map saveAssessmentCodingDetails(String data) throws InvalidKey {
+
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        try {
+            Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("StudentAssessmentServiceImpl-> saveAssessmentCodingDetails ()" + map);
+            if (map.containsKey("student_id") && map.containsKey("question_id") && map.containsKey("code_source") && map.containsKey("marks_id")) {
+                if (map.get("question_id") != null && map.get("student_id") != null && map.get("code_source") != null) {
+                    Long studentId = Long.parseLong(map.get("student_id").toString());
+                    Long questionId = Long.parseLong(map.get("question_id").toString());
+                    String marksId = map.get("marks_id") != null ? map.get("marks_id").toString() : "";
+                    String language = map.get("language") != null ? map.get("language").toString() : "";
+                    String souceCode = map.get("code_source") != null ? map.get("code_source").toString() : "";
+                    if (studentId != 0 && questionId != 0 && souceCode.length() > 0 && language.length() > 0 && marksId.length() > 0) {
+                        AssessmentCodingDetails details = new AssessmentCodingDetails();
+                        byte[] blob = souceCode.getBytes();
+                        details.setQuestion_id(questionId);
+                        details.setCode_source(blob);
+                        AssessmentCodingDetails assCodingDetail = codeDetailsRepository.save(details);
+                        logger.info("Student Assessment Coding details are save successfully" + details.getAssessmentCodingDetails_id());
+                        if (assCodingDetail != null) {
+                            Long assCodingDetailsId = assCodingDetail.getAssessmentCodingDetails_id();
+                            AssessmentCodingMarks acm = null;
+                            Optional<AssessmentCodingMarks> acms = codeMarksRepository.findById(Long.parseLong(marksId));
+                            if (acms.isPresent()) {
+                                acm = acms.get();
+                                if (acm != null) {
+                                    AssessmentCodingDetails updateAssessment = this.validatingTestCases(questionId, assCodingDetail, language, acm);
+                                    boolean isExistAssessmentId = codeDetailsRepository.existsById(assCodingDetailsId);
+                                    if (isExistAssessmentId) {
+                                        codeDetailsRepository.save(updateAssessment);
+                                        resultMap.put("status", "success");
+                                    }
+                                }
+                            } else {
+                                logger.info("Assessment coding marks are not present for this id " + marksId);
+                            }
+                        }
+                    }
+
+                } else {
+                    resultMap.clear();
+                    resultMap.put("status", "Question id, Student id can't null");
+                    throw new NullPointerException("Question id, Student id can't null");
+                }
+            } else {
+                resultMap.clear();
+                logger.info("Key is not valid . Please eneter valid key");
+                resultMap.put("status", "Key is not valid");
+                throw new InvalidKey("Key is not valid . Please eneter valid key.");
+            }
+        } catch (IOException e) {
+            resultMap.clear();
+            resultMap.put("status", "inputexception");
+            logger.info("StudentAssessmentServiceImpl->saveAssessmentCodingDetails () :: Input formate Exception" + e);
+        } catch (Exception e) {
+            resultMap.clear();
+            //e.printStackTrace();
+            resultMap.put("status", "exception");
+            logger.info("StudentAssessmentServiceImpl->saveAssessmentCodingDetails () ::Exception Occured!!" + e);
+
+        }
+
+        logger.info("StudentAssessmentServiceImpl->saveAssessmentCodingDetails () :: resultMap is " + resultMap);
+        return resultMap;
+    }
+
+    private AssessmentCodingDetails validatingTestCases(Long qid, AssessmentCodingDetails acd, String lang, AssessmentCodingMarks acm) {
+        List<CodingQuestionTestCases> list = testCaseRepo.findByQuestionMaster(qid);
+        int testCaseSquence = 0;
+        LinkedHashMap map = new LinkedHashMap();
+        String sourceCode = new String(acd.getCode_source()).replaceAll("\u00a0", " ");
+        map.put("source_code", sourceCode);
+        map.put("language_id", getLanguageIdByName(lang));
+        CommonCompiler compiler = new CommonCompiler();
+        if (!list.isEmpty()) {
+            for (CodingQuestionTestCases a : list) {
+                map.put("stdin", a.getInput());
+                map.put("expected_output", a.getExpectedOutput());
+                LinkedHashMap response = compiler.compilerAndRun(map, compilerUrl);
+                if (!response.isEmpty()) {
+                    if (response.get("description").toString().equalsIgnoreCase("accepted")) {
+                        if (testCaseSquence < 1) {
+                            testCaseSquence++;
+                            acd.setTestCase1Score(acm.getTestCase1Marks());
+                        } else if (testCaseSquence < 2 && testCaseSquence > 0) {
+                            testCaseSquence++;
+                            acd.setTestCase2Score(acm.getTestCase2Marks());
+                        } else if (testCaseSquence < 3 && testCaseSquence > 1) {
+                            acd.setTestCase3Score(acm.getTestCase3Marks());
+                        }
+                    } else {
+                        testCaseSquence++;
+                    }
+                }
+            }
+        } else {
+            acd.setTestCase1Score(acm.getTestCase1Marks());
+            acd.setTestCase2Score(acm.getTestCase2Marks());
+            acd.setTestCase3Score(acm.getTestCase3Marks());
+        }
+        return acd;
+    }
+
+    private String getLanguageIdByName(String language) {
+        String id = null;
+        if (language.equalsIgnoreCase("java")) {
+            return id = "62";
+        } else if (language.equalsIgnoreCase("python")) {
+            id = "71";
+        } else if (language.equalsIgnoreCase("php")) {
+            id = "68";
+        } else if (language.equalsIgnoreCase("javascript")) {
+            id = "63";
+        } else if (language.equalsIgnoreCase("c#")) {
+            id = "51";
+        } else if (language.equalsIgnoreCase("kotlin")) {
+            id = "78";
+        } else if (language.equalsIgnoreCase("objective c")) {
+            id = "79";
+        } else if (language.equalsIgnoreCase("r")) {
+            id = "80";
+        } else if (language.equalsIgnoreCase("rust")) {
+            id = "73";
+        } else if (language.equalsIgnoreCase("scala")) {
+            id = "81";
+        }
+        return id;
+
+    }
+
+    @Override
+    public Map getCodingDetailsBasedOnAssId(String data) {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+        try {
+            Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId ()" + map);
+            if (map.containsKey("student_email") && map.containsKey("organization_id")) {
+                if (map.get("student_email") != null && map.get("organization_id") != null) {
+                    String email = map.get("student_email").toString();
+                    Long organizationId = Long.parseLong(map.get("organization_id").toString());
+                    long studentId = 0l;
+                    if (email.length() > 0 && organizationId != 0) {
+                        studentId = studentMasterRepository.findByEmailAndOrgId(email, organizationId);
+                        if (studentId != 0) {
+                            Long assessmentId = studentAssessmentRepo.findByStudentIdAndOrg(studentId, organizationId);
+                            Optional<AssessmentCodingDetails> details = codeDetailsRepository.findById(assessmentId);
+                            if (details.isPresent()) {
+                                resultMap.put("status", "success");
+                                logger.info("StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId :: Coding details are present " + details.get().getAssessmentCodingDetails_id());
+                                resultMap.put("data", details);
+                            } else {
+                                resultMap.put("status", "No coding details are present");
+                                logger.info("StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId :: No coding details are present ");
+                            }
+                        } else {
+                            resultMap.put("status", "Student email are not exist.");
+                            logger.info("StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId :: Student email are not exist ");
+                        }
+                    } else {
+                        throw new NullPointerException("Student email and organization can't be null");
+                    }
+                }
+            } else {
+                throw new InvalidKey("Please enter valid key.");
+            }
+        } catch (InvalidKey iv) {
+            resultMap.clear();
+            logger.info(" StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId () :: Please Enter valid key.");
+            resultMap.put("status", "Please enter valid key.");
+
+        } catch (NullPointerException iv) {
+            resultMap.clear();
+            logger.info(" StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId () :: Please provide some value.");
+            resultMap.put("status", "Student email and organization can't be null");
+
+        } catch (IOException io) {
+            io.printStackTrace();
+            resultMap.clear();
+            logger.info(" StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId () :: Input Formate Exception.");
+            resultMap.put("status", "Input Formate Exception");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            resultMap.clear();
+            logger.info("StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId () :: Exception Occured !!.");
+            resultMap.put("status", "exception");
+        }
+        logger.info("StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId () :: resultMap is " + resultMap);
+        return resultMap;
+
+    }
+
+    @Override
+    public Map<String, Object> saveTextAssessment(Map<String, Object> map) {
+        logger.info("StudentAssessmentServiceImpl -> saveTextAssessment() :: Method execution start with request data " + map);
+        Map<String, Object> result = new LinkedCaseInsensitiveMap();
+        Map assessmentData = (Map) map.get("assessment");
+        Optional<AssessmentCreation> list = assessmentCreationRepository.findById(Long.parseLong(assessmentData.get("assessment_id").toString()));
+        if (list != null && list.isPresent()) {
+            AssessmentCreation assessment = (AssessmentCreation) list.get();
+            if (assessment != null) {
+                List<LinkedHashMap> selectedQuestions = (List<LinkedHashMap>) assessmentData.get("question_list");
+                Set<QuestionMaster> questionList = assessment.getQuestion_list();
+                if (Integer.parseInt(map.get("mcq").toString()) == 0) {
+                    studentFeedBackService.saveStdntFeedback(assessmentData);
+                    saveAssessment(map);
+                }
+                questionList.stream().forEach(question -> {
+                    Optional<LinkedHashMap> present = selectedQuestions.stream().filter(sq -> sq.get("question_id").toString().equalsIgnoreCase(question.getQuestion_id().toString())).findFirst();
+                    if (present.isPresent() && question.getQuestion_type_id() == 3) {
+                        AssessmentTextDetails atd = new AssessmentTextDetails();
+                        atd.setStudentId(Long.parseLong(map.get("user_id").toString()));
+                        atd.setAssessmentId(assessment.getAssessment_id());
+                        atd.setQuestionId(question.getQuestion_id());
+                        atd.setTextAnswer((present.get()).get("template") != null ? (present.get()).get("template").toString() : "");
+                        atd.setCreatedTime(LocalDateTime.now());
+                        atd.setAssessmentCompleted(Integer.parseInt(map.get("mcq").toString()) == 0);
+                        assessmentDetailsRepo.save(atd);
+                        logger.error("AssessmentCreationServiceImpl -> saveTextAssessment() :: " + map.get("user_id").toString());
+                    }
+                });
+                result.put("status", "success");
+                logger.info("AssessmentCreationServiceImpl -> saveTextAssessment() :: Method execution start with request data " + map);
+            } else {
+                result.put("msg", "Assessment not exist.");
+                result.put("status", "error");
+                logger.error("AssessmentCreationServiceImpl -> saveTextAssessment() :: Assessment not exist.");
+            }
+        } else {
+            result.put("msg", "Assessment not exist.");
+            result.put("status", "error");
+            logger.error("AssessmentCreationServiceImpl -> saveTextAssessment() ::  Assessment not exist. ");
+
+        }
+        logger.info("AssessmentCreationServiceImpl -> saveTextAssessment() :: Method execution completed with response data " + result);
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getTextAnswer(Map map) {
+        Map<String, Object> result = new HashMap<>();
+        List<LinkedCaseInsensitiveMap> data = assessmentDetailsRepo.getTextAnswer(Long.parseLong(map.get("assessment_id").toString()), Long.parseLong(map.get("student_id").toString()));
+        if (!data.isEmpty()) {
+            result.put("status", "success");
+            result.put("data", data);
+        } else {
+            result.put("status", "error");
+            result.put("msg", "No data available!");
+        }
+        return result;
+    }
+
+    @Override
+    public LinkedCaseInsensitiveMap getResultByUserId(Map map) {
+        logger.info("StudentAssessmentServiceImpl -> getResultByUserId() ::  Method execution start with request data  ::  " + map);
+        LinkedCaseInsensitiveMap result = new LinkedCaseInsensitiveMap();
+        if (map.containsKey("user_id") && map.get("user_id") != null) {
+            List<StudentAssessment> user = studentAssessmentRepo.getAssessmentByUserId(Long.parseLong(map.get("user_id").toString()));
+            if (user != null && !user.isEmpty()) {
+                result.put("status", "success");
+                result.put("user", "yes");
+            } else {
+                result.put("status", "error");
+                logger.error("StudentAssessmentServiceImpl -> getResultByUserId() :: Error Occured!!");
+            }
+        } else {
+            result.put("msg", "User not found.");
+            result.put("status", "error");
+            logger.info("StudentAssessmentServiceImpl -> getResultByUserId() :: User not found ");
+        }
+        logger.info("StudentAssessmentServiceImpl -> getResultByUserId() ::  Method execution complete with response data ::  " + result);
+        return result;
     }
 }

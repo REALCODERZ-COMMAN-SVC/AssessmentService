@@ -45,4 +45,7 @@ public interface QuestionMasterRepository extends JpaRepository<QuestionMaster, 
     @Query(nativeQuery = true, value = "SELECT  qm.question_id as question_id,qm.difficulty_id as difficulty_id,qm.language_id as language_id  , qm.topic_id as topic_id from assessment_question aq inner join question_master qm on qm.question_id=aq.question_id Where (aq.assessment_id=:assessmentId)")
     public Set<LinkedCaseInsensitiveMap> getQuestionsByAssId(@Param("assessmentId") Long assessmentid);
 
+    @Query("select expectedOutput from QuestionMaster where question_id=:question_id")
+    public String findExpectedOutputById(@Param("question_id") Long question_id);
+
 }
