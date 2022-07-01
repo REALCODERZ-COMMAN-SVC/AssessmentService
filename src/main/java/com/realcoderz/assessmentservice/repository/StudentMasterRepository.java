@@ -465,4 +465,8 @@ public interface StudentMasterRepository extends JpaRepository<StudentMaster, Lo
 
     @Query(nativeQuery = true, value = "select count(aq.question_id) as topicCount from assessment_question aq , question_master qm,language_master lm where qm.question_id=aq.question_id and qm.language_id=lm.language_id and lm.language_name=:languageName and qm.question_type_id=1 and aq.assessment_id=:assessmentId")
     public Integer findTotalQuestion(@Param("assessmentId") Long assessmentId, @Param("languageName") String topicName);
+
+    @Query("Select student_id  from StudentMaster where lower(email_id)=lower(:email_id) AND organizationId=:organizationId")
+    public Long findByEmailAndOrgId(@Param("email_id") String email_id, @Param("organizationId") Long organizationId);
+
 }

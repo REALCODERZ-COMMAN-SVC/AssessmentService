@@ -8,16 +8,16 @@ package com.realcoderz.assessmentservice.service;
 import java.util.Map;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 
-
 /**
  *
- * @author Aman Bansal
+ * @author Aman
  */
-public interface StudentAssessmentService {
+public interface StudentFeedbackService {
 
-    public Map getTopicScores(LinkedCaseInsensitiveMap assess);
+    public void saveStdntFeedback(Map map);
 
-    public void sonarScannerInterval();
+    public void saveFeedback(Map map);
 
+    public LinkedCaseInsensitiveMap getFeedbackByStudentId(Map map);
 
 }
