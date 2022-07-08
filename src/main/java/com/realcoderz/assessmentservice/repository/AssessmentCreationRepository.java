@@ -22,7 +22,7 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
 @Repository
 public interface AssessmentCreationRepository extends JpaRepository<AssessmentCreation, Long> {
 
-    @Query(nativeQuery = true, value = "SELECT qm.question_id from question_master qm where qm.language_id=:language_id and qm.difficulty_id=:difficulty_id and qm.topic_id=:topic_id and qm.question_type_id=:questionTypeId  order by rand() limit :selectedQuestion")
+    @Query(nativeQuery = true, value = "SELECT qm.question_id from question_master qm where qm.language_id=:language_id and qm.difficulty_id=:difficulty_id and qm.topic_id=:topic_id and qm.question_type_id=:questionTypeId and qm.active='Y' order by rand() limit :selectedQuestion")
     public List<Long> getRandomQuestions(@Param("language_id") Long language_id, @Param("difficulty_id") Long difficulty_id, @Param("topic_id") Long topic_id, @Param("questionTypeId") Long questionTypeId, @Param("selectedQuestion") Integer selectedQuestion);
 
     @Query("from QuestionMaster where question_id in :ids ")
