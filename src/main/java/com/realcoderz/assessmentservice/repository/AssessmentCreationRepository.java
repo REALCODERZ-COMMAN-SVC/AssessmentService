@@ -100,7 +100,7 @@ public interface AssessmentCreationRepository extends JpaRepository<AssessmentCr
     @Query("select ac.codingmarks_id as codingmarks_id,ac.assessment_desc as assessment_desc,ac.language_id as language_id FROM AssessmentCreation ac where ac.assessment_id=:assessment_id")
     public LinkedCaseInsensitiveMap findByAssessmentId(@Param("assessment_id") Long assessment_id);
 
-    @Query(nativeQuery = true, value = "select aq.question_id from assessment_question aq,question_master qm where aq.rcassessment_id=:assessment_id and qm.question_id=aq.question_id and qm.question_type_id=2")
+    @Query(nativeQuery = true, value = "select aq.question_id from assessment_question aq,question_master qm where aq.assessment_id=:assessment_id and qm.question_id=aq.question_id and qm.question_type_id=2")
     public List<Long> findQuestionIdByAssessmentId(@Param("assessment_id") Long assessment_id);
 
 }
