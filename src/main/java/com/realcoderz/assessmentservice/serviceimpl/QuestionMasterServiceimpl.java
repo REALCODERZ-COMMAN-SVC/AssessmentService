@@ -215,17 +215,6 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                             } else {
                                                 mt.put("optionAnswer", printCellValue(cell));
                                             }
-
-                                        } else if (cell.getColumnIndex() == finalmp.get("shuffle")) {
-                                            if ((printCellValue(cell) == null) || (printCellValue(cell) != null && ("".equalsIgnoreCase(String.valueOf(printCellValue(cell)).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
-                                                mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " shuffle is mandatory field .!");
-                                            } else if (!String.valueOf(printCellValue(cell)).equalsIgnoreCase("y") && !String.valueOf(printCellValue(cell)).equalsIgnoreCase("n")) {
-                                                mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " Value of option answer should be Y or N .!");
-
-                                            } else {
-                                                mt.put("shuffle", printCellValue(cell));
-                                            }
-
                                         } else if (cell.getColumnIndex() == finalmp.get("odIndex")) {
                                             if ((printCellValue(cell) == null) || (printCellValue(cell) != null && ("".equalsIgnoreCase(String.valueOf(printCellValue(cell)).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
                                                 mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " optionDescription is mandatory field .!");
@@ -284,12 +273,11 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                                 }
                                             }
                                         } else {
-
                                             if (cell.getColumnIndex() == finalmp.get("serialIndex")) {
                                                 if (printCellValue(cell) != null || cell.getCellType() != Cell.CELL_TYPE_BLANK) {
                                                     mp.put("slno", printCellValue(cell));
                                                 }
-                                            } else if (cell.getColumnIndex() == finalmp.get("languageIndex")) {
+                                            }else if (cell.getColumnIndex() == finalmp.get("languageIndex")) {
                                                 mp.put("language_desc", printCellValue(cell));
                                                 if ((mp.get("language_desc") == null) || (mp.get("language_desc") != null && ("".equalsIgnoreCase(String.valueOf(mp.get("language_desc")).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
                                                     mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " Language is mandatory field .!");
@@ -385,7 +373,13 @@ public class QuestionMasterServiceimpl implements QuestionMasterService {
                                                 } else {
                                                     mp.put("technical", printCellValue(cell));
                                                 }
-                                            } else if (questionTypeId == 1 && cell.getColumnIndex() == finalmp.get("shuffle")) {
+                                            }else if (questionTypeId == 1 && cell.getColumnIndex() == finalmp.get("odIndex")) {
+                                                if ((printCellValue(cell) == null) || (printCellValue(cell) != null && ("".equalsIgnoreCase(String.valueOf(printCellValue(cell)).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
+                                                    mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " optionDescription is mandatory field .!");
+                                                } else {
+                                                    m.put(String.valueOf(printCellValue(cell)), String.valueOf(mt.get("optionAnswer")));
+                                                }
+                                            }else if (questionTypeId == 1 && cell.getColumnIndex() == finalmp.get("shuffle")) {
                                                 if ((printCellValue(cell) == null) || (printCellValue(cell) != null && ("".equalsIgnoreCase(String.valueOf(printCellValue(cell)).trim()))) || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
                                                     mp.put("error", (mp.get("error") != null ? mp.get("error") : "") + " shuffle is mandatory field .!");
                                                     mp.put("class", "alert alert-danger");
