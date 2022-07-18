@@ -79,4 +79,8 @@ public interface AssessmentCreationService {
     public Map<String, Object> getTextAnswer(Map map);
 
     public LinkedCaseInsensitiveMap getResultByUserId(Map map);
+
+    public Map saveAndGetCodingScore(Map<String, Object> map);
+
+    public Map codingQuestionByLanguageId(Map<String, Object> map);
 }

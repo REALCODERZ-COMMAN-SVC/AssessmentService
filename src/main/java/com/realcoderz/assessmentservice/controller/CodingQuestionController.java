@@ -4,12 +4,16 @@
  */
 package com.realcoderz.assessmentservice.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.realcoderz.assessmentservice.payload.SwaggerController.StudentAssessmentControllerPayload;
 import com.realcoderz.assessmentservice.service.AssessmentCreationService;
+import com.realcoderz.assessmentservice.util.EncryptDecryptUtils;
 import io.swagger.annotations.ApiOperation;
+import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/coding")
 public class CodingQuestionController {
+
+    ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private AssessmentCreationService service;
@@ -51,4 +57,31 @@ public class CodingQuestionController {
 
     }
 
+    @PostMapping(path = "/saveAndGetScore")
+    public Map saveAndGetCodingScore(@RequestBody String data) {
+        Map resultSet = new HashMap();
+        try {
+            logger.info("CodingQuestionController ->  saveAndGetCodingScore() :: ");
+            Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            resultSet = service.saveAndGetCodingScore(map);
+        } catch (Exception ex) {
+            resultSet.put("status", "exception");
+            logger.error(" Exception in CodingQuestionController ->  saveAndGetCodingScore() :: " + ex);
+        }
+        return resultSet;
+    }
+
+    @PostMapping(path = "/getByLangId")
+    public Map codingQuestionByLanguageId(@RequestBody String data) {
+        Map resultSet = new HashMap();
+        try {
+            logger.info("CodingQuestionController ->  codingQuestionByLanguageId() :: ");
+            Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            resultSet = service.codingQuestionByLanguageId(map);
+        } catch (Exception ex) {
+            resultSet.put("status", "exception");
+            logger.error(" Exception in CodingQuestionController ->  saveAndGetCodingScore() :: " + ex);
+        }
+        return resultSet;
+    }
 }

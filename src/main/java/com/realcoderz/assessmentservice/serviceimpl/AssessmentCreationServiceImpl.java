@@ -6,7 +6,13 @@
 package com.realcoderz.assessmentservice.serviceimpl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.realcoderz.assessmentservice.domain.AssessmentCodingDetails;
+import com.realcoderz.assessmentservice.domain.AssessmentCodingIssues;
 import com.realcoderz.assessmentservice.domain.AssessmentCodingMarks;
 import com.realcoderz.assessmentservice.domain.AssessmentCreation;
 import com.realcoderz.assessmentservice.domain.AssessmentTextDetails;
@@ -40,9 +46,15 @@ import com.realcoderz.assessmentservice.repository.UserMasterRepository;
 import com.realcoderz.assessmentservice.service.AssessmentCreationService;
 import com.realcoderz.assessmentservice.service.StudentAssessmentService;
 import com.realcoderz.assessmentservice.service.StudentFeedbackService;
+import static com.realcoderz.assessmentservice.serviceimpl.StudentAssessmentServiceImpl.logger;
 import com.realcoderz.assessmentservice.util.CommonCompiler;
 import com.realcoderz.assessmentservice.util.EncryptDecryptUtils;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -61,8 +73,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sonar.wsclient.SonarClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -127,6 +141,15 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
 
     @Value("${compiler_url}")
     private String compilerUrl;
+
+    @Value("${sonar_url}")
+    private String sonarUrl;
+
+    @Value("${sonar_login}")
+    private String sonarLogin;
+
+    @Value("${sonar_password}")
+    private String sonarPassword;
 
     @Autowired
     private StudentFeedbackService studentFeedBackService;
@@ -1099,51 +1122,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         try {
             Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             logger.info("StudentAssessmentServiceImpl-> saveAssessmentCodingDetails ()" + map);
-            if (map.containsKey("student_id") && map.containsKey("question_id") && map.containsKey("code_source") && map.containsKey("marks_id")) {
-                if (map.get("question_id") != null && map.get("student_id") != null && map.get("code_source") != null) {
-                    Long studentId = Long.parseLong(map.get("student_id").toString());
-                    Long questionId = Long.parseLong(map.get("question_id").toString());
-                    String marksId = map.get("marks_id") != null ? map.get("marks_id").toString() : "";
-                    String language = map.get("language") != null ? map.get("language").toString() : "";
-                    String souceCode = map.get("code_source") != null ? map.get("code_source").toString() : "";
-                    if (studentId != 0 && questionId != 0 && souceCode.length() > 0 && language.length() > 0 && marksId.length() > 0) {
-                        AssessmentCodingDetails details = new AssessmentCodingDetails();
-                        byte[] blob = souceCode.getBytes();
-                        details.setQuestion_id(questionId);
-                        details.setCode_source(blob);
-                        AssessmentCodingDetails assCodingDetail = codeDetailsRepository.save(details);
-                        logger.info("Student Assessment Coding details are save successfully" + details.getAssessmentCodingDetails_id());
-                        if (assCodingDetail != null) {
-                            Long assCodingDetailsId = assCodingDetail.getAssessmentCodingDetails_id();
-                            AssessmentCodingMarks acm = null;
-                            Optional<AssessmentCodingMarks> acms = codeMarksRepository.findById(Long.parseLong(marksId));
-                            if (acms.isPresent()) {
-                                acm = acms.get();
-                                if (acm != null) {
-                                    AssessmentCodingDetails updateAssessment = this.validatingTestCases(questionId, assCodingDetail, language, acm);
-                                    boolean isExistAssessmentId = codeDetailsRepository.existsById(assCodingDetailsId);
-                                    if (isExistAssessmentId) {
-                                        codeDetailsRepository.save(updateAssessment);
-                                        resultMap.put("status", "success");
-                                    }
-                                }
-                            } else {
-                                logger.info("Assessment coding marks are not present for this id " + marksId);
-                            }
-                        }
-                    }
-
-                } else {
-                    resultMap.clear();
-                    resultMap.put("status", "Question id, Student id can't null");
-                    throw new NullPointerException("Question id, Student id can't null");
-                }
-            } else {
-                resultMap.clear();
-                logger.info("Key is not valid . Please eneter valid key");
-                resultMap.put("status", "Key is not valid");
-                throw new InvalidKey("Key is not valid . Please eneter valid key.");
-            }
+            resultMap = this.saveAssessmentCodingQuestion(map);
         } catch (IOException e) {
             resultMap.clear();
             resultMap.put("status", "inputexception");
@@ -1366,5 +1345,282 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         logger.info("StudentAssessmentServiceImpl -> getResultByUserId() ::  Method execution complete with response data ::  " + result);
         return result;
+    }
+
+    private Map saveAssessmentCodingQuestion(Map map) {
+        Map resultMap = new HashMap();
+        if (map.containsKey("student_id") && map.containsKey("question_id") && map.containsKey("code_source") && map.containsKey("marks_id")) {
+            if (map.get("question_id") != null && map.get("student_id") != null && map.get("code_source") != null) {
+                Long studentId = Long.parseLong(map.get("student_id").toString());
+                Long questionId = Long.parseLong(map.get("question_id").toString());
+                String marksId = map.get("marks_id") != null ? map.get("marks_id").toString() : "";
+                String language = map.get("language") != null ? map.get("language").toString() : "";
+                String souceCode = map.get("code_source") != null ? map.get("code_source").toString() : "";
+                if (studentId != 0 && questionId != 0 && souceCode.length() > 0 && language.length() > 0 && marksId.length() > 0) {
+                    AssessmentCodingDetails details = new AssessmentCodingDetails();
+                    byte[] blob = souceCode.getBytes();
+                    details.setQuestion_id(questionId);
+                    details.setCode_source(blob);
+                    details.setUser_id(studentId);
+                    AssessmentCodingDetails assCodingDetail = codeDetailsRepository.save(details);
+                    logger.info("Student Assessment Coding details are save successfully" + details.getAssessmentCodingDetails_id());
+                    if (assCodingDetail != null) {
+                        Long assCodingDetailsId = assCodingDetail.getAssessmentCodingDetails_id();
+                        AssessmentCodingMarks acm = null;
+                        Optional<AssessmentCodingMarks> acms = codeMarksRepository.findById(Long.parseLong(marksId));
+                        if (acms.isPresent()) {
+                            acm = acms.get();
+                            if (acm != null) {
+                                AssessmentCodingDetails updateAssessment = this.validatingTestCases(questionId, assCodingDetail, language, acm);
+                                boolean isExistAssessmentId = codeDetailsRepository.existsById(assCodingDetailsId);
+                                if (isExistAssessmentId) {
+                                    codeDetailsRepository.save(updateAssessment);
+                                    resultMap.put("codingDetails", assCodingDetail);
+                                    resultMap.put("status", "success");
+                                }
+                            }
+                        } else {
+                            logger.info("Assessment coding marks are not present for this id " + marksId);
+                        }
+                    }
+                }
+
+            } else {
+                resultMap.clear();
+                resultMap.put("status", "Question id, Student id can't null");
+                throw new NullPointerException("Question id, Student id can't null");
+            }
+        } else {
+            resultMap.clear();
+            logger.info("Key is not valid . Please eneter valid key");
+            resultMap.put("status", "Key is not valid");
+            throw new InvalidKey("Key is not valid . Please eneter valid key.");
+        }
+        return resultMap;
+    }
+
+    @Override
+    public Map saveAndGetCodingScore(Map<String, Object> map) {
+        Map resultSet = new HashMap();
+        try {
+            logger.info("AssessmentCreationServiceImpl -> saveAndGetCodingScore() ::  Method execution start with request data  ::  " + map);
+            resultSet = this.saveAssessmentCodingQuestion(map);
+            if (!resultSet.isEmpty()) {
+                if (resultSet.containsKey("status") && resultSet.get("status") != null && resultSet.get("status").toString().equalsIgnoreCase("success")) {
+                    int totalCodingScore = 0;
+                    Long studentId = Long.parseLong(map.get("student_id").toString());
+                    Long codingMarksId = Long.parseLong(map.get("marks_id").toString());
+                    Long questionId = Long.parseLong(map.get("question_id").toString());
+                    String language = questionMasterRepository.getLanguageNameById(questionId);
+                    Optional<AssessmentCodingMarks> acm = codeMarksRepository.findById(codingMarksId);
+                    if (acm.isPresent()) {
+
+                        long uid = studentId;
+                        List<AssessmentCodingDetails> listOfcodingDetails = codeDetailsRepository.findByUserQuestionId(uid, questionId);
+                        if (listOfcodingDetails != null && !listOfcodingDetails.isEmpty()) {
+                            AssessmentCodingDetails codingDetails = listOfcodingDetails.get(0);
+                            byte[] sourceCode = codingDetails.getCode_source();
+                            int score = 0, critical = 0, major = 0, minor = 0;
+                            if (codingDetails.getRun_score() > 0) {
+                                codingDetails = this.validatingTestCases(questionId, codingDetails, language, acm.get());
+                                score = codingDetails.getTestCase1Score() + codingDetails.getTestCase2Score() + codingDetails.getTestCase3Score();
+                                if (score > 0) {
+                                    String filename;
+                                    if (language.equalsIgnoreCase("java")) {
+                                        filename = "JavaCode.java";
+                                    } else if (language.equalsIgnoreCase("python")) {
+                                        filename = "PythonCode.py";
+                                    } else if (language.equalsIgnoreCase("php")) {
+                                        filename = "PhpCode.php";
+                                    } else if (language.equalsIgnoreCase("javascript")) {
+                                        filename = "JSCode.js";
+                                    } else if (language.equalsIgnoreCase("c#")) {
+                                        filename = "CsharpCode.cs";
+                                    } else if (language.equalsIgnoreCase("kotlin")) {
+                                        filename = "KotlinCode.kotlin";
+                                    } else {
+                                        filename = "ScalaCode.scala";
+                                    }
+                                    String pathDir = "sourcecode/" + studentId + questionId;
+                                    String pathFile = "sourcecode/" + studentId + questionId + "/" + filename;
+                                    File dir = new File(pathDir);
+                                    dir.mkdirs();
+                                    File file = new File(pathFile);
+                                    file.createNewFile();
+                                    logger.info("file created at  -> " + file.getAbsolutePath());
+                                    try (FileWriter fw = new FileWriter(pathFile)) {
+                                        fw.write(new String(sourceCode, StandardCharsets.UTF_8));
+                                    }
+                                    if (file.exists()) {
+                                        Process p;
+                                        if (language.equalsIgnoreCase("java")) {
+                                            p = processBuilder(pathDir, "java", studentId.toString() + questionId);
+                                        } else if (language.equalsIgnoreCase("python")) {
+                                            p = processBuilder(pathDir, "py", studentId.toString() + questionId);
+                                        } else if (language.equalsIgnoreCase("php")) {
+                                            p = processBuilder(pathDir, "php", studentId.toString() + questionId);
+                                        } else if (language.equalsIgnoreCase("javascript")) {
+                                            p = processBuilder(pathDir, "js", studentId.toString() + questionId);
+                                        } else if (language.equalsIgnoreCase("c#")) {
+                                            p = processBuilder(pathDir, "cs", studentId.toString() + questionId);
+                                        } else if (language.equalsIgnoreCase("kotlin")) {
+                                            p = processBuilder(pathDir, "kotlin", studentId.toString() + questionId);
+                                        } else {
+                                            p = processBuilder(pathDir, "scala", studentId.toString() + questionId);
+                                        }
+
+                                        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                                        while (true) {
+                                            String log = r.readLine();
+                                            logger.info("Scanner_Log: " + log);
+                                            if (log == null) {
+                                                SonarClient client = SonarClient.builder().url(sonarUrl).login(sonarLogin).password(sonarPassword).build();
+                                                Map<String, Object> params = new HashMap<>();
+                                                params.put("projects", "code_" + studentId + questionId);
+                                                String res = client.get("/api/projects/search", params);
+                                                JsonObject obj = new JsonParser().parse(res).getAsJsonObject();
+                                                Integer exist = obj.get("paging").getAsJsonObject().get("total").getAsInt();
+                                                int times = 1;
+                                                while (exist == 0) {
+                                                    while (times < 20) {
+                                                        Thread.sleep(3000);
+                                                        times++;
+                                                        res = client.get("/api/projects/search", params);
+                                                        obj = new JsonParser().parse(res).getAsJsonObject();
+                                                        exist = obj.get("paging").getAsJsonObject().get("total").getAsInt();
+                                                        if (times == 19) {
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                if (exist > 0) {
+                                                    params.clear();
+                                                    Thread.sleep(30000);
+                                                    params.put("componentKeys", "code_" + studentId + questionId);
+                                                    res = client.get("/api/issues/search", params);
+                                                    logger.info("res /api/issues/search code_" + studentId + questionId + " -> " + res);
+                                                    Set<AssessmentCodingIssues> codeIssues = new HashSet<>();
+                                                    JsonElement root = new JsonParser().parse(res);
+                                                    JsonArray object = root.getAsJsonObject().get("issues").getAsJsonArray();
+                                                    Gson gson = new Gson();
+                                                    List<Map<String, Object>> issueList = gson.fromJson(object, List.class);
+                                                    logger.info("issue list " + issueList.size());
+                                                    for (int i = 0; i < issueList.size(); i++) {
+                                                        AssessmentCodingIssues aci = new AssessmentCodingIssues();
+                                                        aci.setIssue_desc(issueList.get(i).get("message") + "");
+                                                        aci.setIssue_type(issueList.get(i).get("type") + "");
+                                                        if (issueList.get(i).get("line") != null) {
+                                                            aci.setIssue_line_no((int) Math.round(Double.parseDouble(issueList.get(i).get("line").toString())));
+                                                        }
+                                                        codeIssues.add(aci);
+                                                        if (issueList.get(i).get("severity").toString().equalsIgnoreCase("CRITICAL")) {
+                                                            critical++;
+                                                        } else if (issueList.get(i).get("severity").toString().equalsIgnoreCase("MAJOR")) {
+                                                            major++;
+                                                        } else if (issueList.get(i).get("severity").toString().equalsIgnoreCase("MINOR")) {
+                                                            minor++;
+                                                        }
+                                                    }
+                                                    if (minor <= acm.get().getMinorIssues()) {
+                                                        score += acm.get().getMinorIssuesMarks();
+                                                    }
+                                                    if (critical <= acm.get().getCriticalIssues()) {
+                                                        score += acm.get().getCriticalIssuesMarks();
+                                                    }
+                                                    if (major <= acm.get().getMajorIssues()) {
+                                                        score += acm.get().getMajorIssuesMarks();
+                                                    }
+                                                    score += codingDetails.getRun_score() + codingDetails.getCompile_score();
+                                                    totalCodingScore += score;
+                                                    codingDetails.setCritical_issues(critical);
+                                                    codingDetails.setMajor_issues(major);
+                                                    codingDetails.setMinor_issues(minor);
+                                                    codingDetails.setCoding_score(score);
+                                                    codingDetails.setIssuesList(codeIssues);
+                                                    codingDetails.setScan(true);
+                                                    codeDetailsRepository.save(codingDetails);
+                                                    listOfcodingDetails.stream().forEach(list -> {
+                                                        list.setScan(true);
+                                                    });
+                                                    codeDetailsRepository.saveAll(listOfcodingDetails);
+                                                    params.clear();
+                                                    params.put("project", "code_" + studentId + questionId);
+                                                    client.post("/api/projects/delete", params);
+                                                    FileUtils.deleteDirectory(dir);
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    totalCodingScore += score;
+                                    codingDetails.setCritical_issues(critical);
+                                    codingDetails.setMajor_issues(major);
+                                    codingDetails.setMinor_issues(minor);
+                                    codingDetails.setCoding_score(score);
+                                    codingDetails.setScan(true);
+                                    codeDetailsRepository.save(codingDetails);
+                                    listOfcodingDetails.stream().forEach(list -> {
+                                        list.setScan(true);
+                                    });
+                                    codeDetailsRepository.saveAll(listOfcodingDetails);
+                                }
+                            } else {
+                                totalCodingScore += score;
+                                codingDetails.setCritical_issues(critical);
+                                codingDetails.setMajor_issues(major);
+                                codingDetails.setMinor_issues(minor);
+                                codingDetails.setCoding_score(score);
+                                codingDetails.setScan(true);
+                                codeDetailsRepository.save(codingDetails);
+                                listOfcodingDetails.stream().forEach(list -> {
+                                    list.setScan(true);
+                                });
+                                codeDetailsRepository.saveAll(listOfcodingDetails);
+
+                            }
+                        }
+
+                        resultSet.put("totalCodingScore", totalCodingScore);
+                        resultSet.put("status", "succes");
+
+                    } else {
+                        logger.info("Assessment coding marks does not exist with this assessment: ");
+                    }
+                } else {
+                    resultSet.put("status", "error");
+                    return resultSet;
+                }
+            }
+        } catch (Exception ex) {
+
+        }
+        return resultSet;
+    }
+
+    private Process processBuilder(String pathDir, String language, String id) throws IOException {
+        return new ProcessBuilder("sh", "-c", "sonar-scanner -Dsonar.host.url=" + sonarUrl + " -Dsonar.login=" + sonarLogin + " -Dsonar.password=" + sonarPassword
+                + "    -Dsonar.sources=" + pathDir + " "
+                + "    -Dsonar.language=" + language + " "
+                + "    -Dsonar.java.binaries=/classes "
+                + "    -Dsonar.projectKey=code_" + id).start();
+    }
+
+    @Override
+    public Map codingQuestionByLanguageId(Map<String, Object> map) {
+        Map resultMap = new HashMap();
+        try {
+            if (map.containsKey("language_name") && map.get("language_name") != null && map.containsKey("organizationId") && map.get("organizationId") != null) {
+                Long language_id = languageMasterRepository.findByName(map.get("language_name").toString(), Long.parseLong(map.get("organizationId").toString()));
+                LinkedCaseInsensitiveMap question = questionMasterRepository.findQuestionBylangId(language_id, Long.parseLong(map.get("organizationId").toString()));
+                resultMap.put("status", "success");
+                resultMap.put("question", question);
+            } else {
+                throw new NullPointerException("Please Provide a Valid Key or Value !!");
+            }
+        } catch (Exception ex) {
+
+        }
+        return resultMap;
     }
 }
