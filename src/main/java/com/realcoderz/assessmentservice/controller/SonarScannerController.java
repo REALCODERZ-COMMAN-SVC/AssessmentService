@@ -36,5 +36,6 @@ public class SonarScannerController {
              logger.error("Problem in SonarScannerController -> sonarScannerInterval() :: ", ex);
          }
      }
+     
     
 }
