@@ -547,53 +547,57 @@ public class StudentAssessmentServiceImpl implements StudentAssessmentService {
         return aiResponseValue;
     }
 
-    private void getDataToPredictAIScore(Long studentId) throws IOException {
+private void getDataToPredictAIScore(Long studentId) throws IOException {
         logger.info("StudentAssessmentServiceImpl -> getDataToPredictAIScore() ::  Method execution start with request data  ::  " + studentId);
-        StudentMaster studentMaster = studentMasterRepository.findByStudentId(studentId);
-        if (studentMaster != null) {
-            if (profile.equalsIgnoreCase("prod")) {
-                String data;
-                try {
-                    do {
-                        data = studentMasterRepository.getDataToPredictAIScore(studentId);
-                        logger.info("student_data: " + data);
-                    } while (data == null);
-                    Storage storage = StorageOptions.getDefaultInstance().getService();
-                    List<com.google.protobuf.Value> values = new ArrayList<>();
-                    String[] predictData = data.split(",");
-                    for (int i = 0; i < predictData.length; i++) {
-                        if (i == 0 && i == 1 && i == 2 && i == 3 && i == 5) {
-                            int roundVal = (int) Math.round(Double.valueOf(predictData[i]));
-                            values.add(com.google.protobuf.Value.newBuilder()
-                                    .setNumberValue(roundVal).build());
-                        } else {
-                            values.add(com.google.protobuf.Value.newBuilder().setStringValue(predictData[i]).build());
+        try {
+            StudentMaster studentMaster = studentMasterRepository.findByStudentId(studentId);
+            if (studentMaster != null) {
+                if (profile.equalsIgnoreCase("prod")) {
+                    String data;
+                    try {
+                        do {
+                            data = studentMasterRepository.getDataToPredictAIScore(studentId);
+                            logger.info("student_data: " + data);
+                        } while (data == null);
+                        Storage storage = StorageOptions.getDefaultInstance().getService();
+                        List<com.google.protobuf.Value> values = new ArrayList<>();
+                        String[] predictData = data.split(",");
+                        for (int i = 0; i < predictData.length; i++) {
+                            if (i == 0 && i == 1 && i == 2 && i == 3 && i == 5) {
+                                int roundVal = (int) Math.round(Double.valueOf(predictData[i]));
+                                values.add(com.google.protobuf.Value.newBuilder()
+                                        .setNumberValue(roundVal).build());
+                            } else {
+                                values.add(com.google.protobuf.Value.newBuilder().setStringValue(predictData[i]).build());
+                            }
                         }
-                    }
-                    Double x = predict("realcoderz-production", "TBL3075959645005676544", values);
-                    studentMaster.setAi_score(x);
-                    if (x > 60 && Double.parseDouble(predictData[5]) > 60 && studentMaster.getOrganizationId() == Long.parseLong(organizationId)) {
-                        StudentCertification sc = certificateRepository.findByStudentId(studentId);
-                        if (sc == null) {
-                            sc = new StudentCertification();
-                            sc.setAssignedOn(new Date());
-                            sc.setCertificateLevel("level 1");
-                            sc.setCertificateUrl("https://storage.googleapis.com/rcpublicimages/CA.png");
-                            sc.setCertificateNumber("RCIT" + studentId + "00" + Math.round(Math.random() * 1000));
-                            sc.setStudentId(studentId);
-                            certificateRepository.save(sc);
+                        Double x = predict("assessment-service", "TBL3075959645005676544", values);
+                        studentMaster.setAi_score(x);
+                        if (x > 60 && Double.parseDouble(predictData[5]) > 60 && studentMaster.getOrganizationId() == Long.parseLong(organizationId)) {
+                            StudentCertification sc = certificateRepository.findByStudentId(studentId);
+                            if (sc == null) {
+                                sc = new StudentCertification();
+                                sc.setAssignedOn(new Date());
+                                sc.setCertificateLevel("level 1");
+                                sc.setCertificateUrl("https://storage.googleapis.com/rcpublicimages/CA.png");
+                                sc.setCertificateNumber("RCIT" + studentId + "00" + Math.round(Math.random() * 1000));
+                                sc.setStudentId(studentId);
+                                certificateRepository.save(sc);
+                            }
                         }
-                    }
-                } catch (IOException | NumberFormatException ex) {
-                    logger.error("Getting Exception: " + ex);
-                    logger.error("StudentAssessmentServiceImpl -> getDataToPredictAIScore() ::  NumberFormateException " + ex);
+                    } catch (IOException | NumberFormatException ex) {
+                        logger.error("Getting Exception: " + ex);
+                        logger.error("StudentAssessmentServiceImpl -> getDataToPredictAIScore() ::  NumberFormateException " + ex);
 
+                    }
+                } else {
+                    logger.info("Setting score zero");
+                    studentMaster.setAi_score(0.00);
                 }
-            } else {
-                logger.info("Setting score zero");
-                studentMaster.setAi_score(0.00);
+                studentMasterRepository.save(studentMaster);
             }
-            studentMasterRepository.save(studentMaster);
+        } catch (Exception ex) {
+            logger.info("Problem in StudentAssessmentServiceImpl -> getDataToPredictAIScore() For student_id :: "+studentId);
         }
         logger.info("StudentAssessmentServiceImpl -> getDataToPredictAIScore() ::  Method execution completed ");
 
