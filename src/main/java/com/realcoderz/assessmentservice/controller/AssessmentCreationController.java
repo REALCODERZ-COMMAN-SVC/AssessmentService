@@ -800,7 +800,8 @@ public class AssessmentCreationController {
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             logger.info("AssessmentCreationController --> getQuiz() :: map data" + map);
-            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()), Long.parseLong(map.get("organizationId").toString()));
+//            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()), Long.parseLong(map.get("organizationId").toString()));
+        resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), map.get("jobportal_id") != null ? Long.parseLong(map.get("jobportal_id").toString()) : null, Long.parseLong(map.get("organizationId").toString()), map.get("assessmentId") != null ? Long.parseLong(map.get("assessmentId").toString()) : null);
         } catch (IOException ex) {
             resultMap.clear();
             resultMap.put("status", "exception");

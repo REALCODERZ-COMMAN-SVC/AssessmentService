@@ -74,6 +74,19 @@ public class AssessmentCreation extends Auditable<String> implements Serializabl
 
     @NotNull(message = "Time can't be empty")
     private Integer time;
+    private Boolean webcam;
+
+    private Boolean onScreen;
+
+    private Boolean onMail;
+
+    private Boolean onProfile;
+
+    private int proctCount;
+
+    private Boolean mediaUpload;
+
+    private Boolean detailForm;
 
 //    @NotNull(message = "Creation Type can't be empty")
     private String creation_type;

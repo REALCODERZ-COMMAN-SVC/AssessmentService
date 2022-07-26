@@ -74,6 +74,7 @@ public class StudentAssessment extends Auditable<String> implements Serializable
     private double totalPercentage;
     private Long jobPortalId;
     private boolean scan;
+    private Boolean directAss;
 
     public StudentAssessment(Long student_assessment_id, Long student_id, Long assessment_id, Date startTime, Date endTime, Set<StudentAssessmentDetails> detail_list, Integer correct_questions, Integer total_no_of_questions, String remarks, Long jobPortalId) {
         this.student_assessment_id = student_assessment_id;

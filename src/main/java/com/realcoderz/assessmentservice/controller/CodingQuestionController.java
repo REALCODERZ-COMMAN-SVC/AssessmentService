@@ -58,11 +58,11 @@ public class CodingQuestionController {
     }
 
     @PostMapping(path = "/saveAndGetScore")
-    public Map saveAndGetCodingScore(@RequestBody String data) {
+    public Map saveAndGetCodingScore(@RequestBody Map map) {
         Map resultSet = new HashMap();
         try {
             logger.info("CodingQuestionController ->  saveAndGetCodingScore() :: ");
-            Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+//            Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             resultSet = service.saveAndGetCodingScore(map);
         } catch (Exception ex) {
             resultSet.put("status", "exception");

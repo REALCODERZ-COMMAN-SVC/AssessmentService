@@ -56,8 +56,6 @@ public interface AssessmentCreationService {
 
     public Map getAssessmentByBatchAssociateId(Long batchId, Long userId);
 
-    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId, Long organizationId);
-
     public CompletableFuture<LinkedCaseInsensitiveMap> saveAssessment(Map map);
 
     public void saveAnswerDetails(Map map);
@@ -83,4 +81,10 @@ public interface AssessmentCreationService {
     public Map saveAndGetCodingScore(Map<String, Object> map);
 
     public Map codingQuestionByLanguageId(Map<String, Object> map);
+
+    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId, Long organizationId, Long assessmentId);
+
+    public LinkedCaseInsensitiveMap getTopicWiseScoresForStudent(LinkedCaseInsensitiveMap stdntAssessment);
+
+    public Map getCandidateByAssId(Map map);
 }
