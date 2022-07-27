@@ -49,6 +49,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -801,7 +804,7 @@ public class AssessmentCreationController {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             logger.info("AssessmentCreationController --> getQuiz() :: map data" + map);
 //            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()), Long.parseLong(map.get("organizationId").toString()));
-        resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), map.get("jobportal_id") != null ? Long.parseLong(map.get("jobportal_id").toString()) : null, Long.parseLong(map.get("organizationId").toString()), map.get("assessmentId") != null ? Long.parseLong(map.get("assessmentId").toString()) : null);
+            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), map.get("jobportal_id") != null ? Long.parseLong(map.get("jobportal_id").toString()) : null, Long.parseLong(map.get("organizationId").toString()), map.get("assessmentId") != null ? Long.parseLong(map.get("assessmentId").toString()) : null);
         } catch (IOException ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
@@ -821,15 +824,22 @@ public class AssessmentCreationController {
             map.put("accessToken", request.getHeader("Authorization"));
             Long assessmentId = ((map.containsKey("assessmentId") && map.get("assessmentId") != null) ? Long.parseLong(map.get("assessmentId").toString()) : 0);
             if (assessmentId > 0) {
-                resultMap.put("status", "success");
                 assessmentCreationService.saveStudentFeedBack(map);
-                assessmentCreationService.saveAssessment(map);
+                CompletableFuture<LinkedCaseInsensitiveMap> assessmentData = assessmentCreationService.saveAssessment(map);
+                resultMap.put("correct_questions", assessmentData.get().get("correct_questions"));
+                resultMap.put("total_questions", assessmentData.get().get("total_questions"));
+                resultMap.put("status", "success");
+
             } else {
                 resultMap.put("msg", "Nothing to save.");
                 resultMap.put("status", "error");
             }
         } catch (IOException ex) {
             logger.error("Problem in AssessmentCreationController -> saveAssessment() :: ", ex);
+        } catch (InterruptedException ex) {
+            java.util.logging.Logger.getLogger(AssessmentCreationController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ExecutionException ex) {
+            java.util.logging.Logger.getLogger(AssessmentCreationController.class.getName()).log(Level.SEVERE, null, ex);
         }
         logger.info("AssessmentCreationController -> saveAssessment() :: Method completed successfully. With response date : " + resultMap);
 
