@@ -23,7 +23,7 @@ public interface CodingQuestionTestCaseRepository extends JpaRepository<CodingQu
     @Query("SELECT testCases from CodingQuestionTestCases as testCases where testCases.questionMaster.question_id = :question_id")
     public List<CodingQuestionTestCases> findByQuestionMaster(@Param("question_id") Long question_id);
 
-    @Query(nativeQuery = true, value = "select qm.question_id, qm.question_desc from question_master qm, assessment_creation ac where qm.question_type_id=2  and ac.assessment_id=:student_assessment_id and ac.language_id=qm.language_id and qm.organization_id=:organization_id")
+    @Query(nativeQuery = true, value = "select qm.question_id,ac.codingmarks_id as marks_id, qm.question_desc from question_master qm, assessment_creation ac where qm.question_type_id=2  and ac.assessment_id=:student_assessment_id and ac.language_id=qm.language_id and qm.organization_id=:organization_id")
     public List<LinkedCaseInsensitiveMap> getCodingQuestion(@Param("student_assessment_id") Long student_assessment_id, @Param("organization_id") Long organization_id);
 
     @Query("SELECT testCases from CodingQuestionTestCases as testCases where testCases.questionMaster.question_id = :question_id")

@@ -51,7 +51,7 @@ public interface QuestionMasterRepository extends JpaRepository<QuestionMaster, 
     @Query(nativeQuery = true, value = "select lm.language_name from question_master qm  inner join language_master lm on lm.language_id=qm.language_id Where qm.question_id=:question_id")
     public String getLanguageNameById(@Param("question_id") Long question_id);
 
-    @Query(nativeQuery = true, value = "SELECT qm.question_desc , tm.topic_name,qm.expected_output FROM question_master qm inner join topic_master tm on tm.topic_id=qm.topic_id where qm.question_type_id=2 and qm.language_id=:language_id and qm.organization_id=:organizationId order by rand() limit 0,1 ")
-    public LinkedCaseInsensitiveMap findQuestionBylangId(@Param("language_id") Long language_id, @Param("organizationId") Long organizationId);
+    @Query(nativeQuery = true, value = "SELECT qm.question_desc , tm.topic_name,qm.expected_output FROM question_master qm inner join topic_master tm on tm.topic_id=qm.topic_id where qm.question_type_id=2 and qm.language_id=:language_id and qm.organization_id=:organizationId order by rand() ")
+    public List<LinkedCaseInsensitiveMap> findQuestionBylangId(@Param("language_id") Long language_id, @Param("organizationId") Long organizationId);
 
 }

@@ -1623,11 +1623,12 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     public Map codingQuestionByLanguageId(Map<String, Object> map) {
         Map resultMap = new HashMap();
         try {
-            if (map.containsKey("language_name") && map.get("language_name") != null && map.containsKey("organizationId") && map.get("organizationId") != null) {
-                Long language_id = languageMasterRepository.findByName(map.get("language_name").toString(), Long.parseLong(map.get("organizationId").toString()));
-                LinkedCaseInsensitiveMap question = questionMasterRepository.findQuestionBylangId(language_id, Long.parseLong(map.get("organizationId").toString()));
+            if (map.containsKey("language_id") && map.get("language_id") != null && map.containsKey("organizationId") && map.get("organizationId") != null) {
+                List<LinkedCaseInsensitiveMap> question = questionMasterRepository.findQuestionBylangId(Long.parseLong(map.get("language_id").toString()), Long.parseLong(map.get("organizationId").toString()));
+                Long marksId = codeMarksRepository.findByOrganizationId(Long.parseLong(map.get("organizationId").toString()));
                 resultMap.put("status", "success");
                 resultMap.put("question", question);
+                resultMap.put("marks_id", marksId);
             } else {
                 throw new NullPointerException("Please Provide a Valid Key or Value !!");
             }
