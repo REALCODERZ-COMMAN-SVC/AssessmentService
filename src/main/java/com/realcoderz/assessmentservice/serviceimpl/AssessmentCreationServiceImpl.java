@@ -160,6 +160,9 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     @Autowired
     AssessmentCodingDetailsRepository codeDetailsRepository;
 
+    @Autowired
+    StudentTopicScoresRepo studentTopicScoresRepo;
+
     @Override
     public Map add(Map map) {
         Map resultSet = new HashMap();
@@ -175,7 +178,14 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             assessmentCreation.setCreation_type(map.get("creation_type").toString());
             assessmentCreation.setActive(map.get("active").toString().charAt(0));
             assessmentCreation.setOrganizationId(Long.parseLong(map.get("organizationId").toString()));
+            assessmentCreation.setOnScreen(Boolean.parseBoolean(map.get("onScreen").toString()));
+            assessmentCreation.setOnMail(Boolean.parseBoolean(map.get("onMail").toString()));
+            assessmentCreation.setDetailForm(Boolean.parseBoolean(map.get("detailForm").toString()));
+            assessmentCreation.setMediaUpload(Boolean.parseBoolean(map.get("mediaUpload").toString()));
+            assessmentCreation.setWebcam(Boolean.parseBoolean(map.get("webcam").toString()));
+
             List<LinkedHashMap> topicWiseData = (List<LinkedHashMap>) map.get("randomTopics");
+
             for (LinkedHashMap topic : topicWiseData) {
                 if (topic.containsKey("selectedMCQQuestion")) {
                     if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
@@ -615,10 +625,15 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     }
 
     @Override
-    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId, Long organizationId) {
+    public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId, Long organizationId, Long assessmntId) {
         LinkedCaseInsensitiveMap resultMap = new LinkedCaseInsensitiveMap();
         if (user_id != null && !"".equalsIgnoreCase(user_id.toString())) {
-            List<LinkedCaseInsensitiveMap> list = assessmentCreationRepository.getQuizByName(jobportalId);
+            List<LinkedCaseInsensitiveMap> list = new ArrayList<>();
+            if (assessmntId != null && jobportalId == null) {
+                list = assessmentCreationRepository.getAssessmentById(assessmntId);
+            } else {
+                list = assessmentCreationRepository.getQuizByName(jobportalId);
+            }
             if (list != null && !list.isEmpty()) {
                 LinkedCaseInsensitiveMap assessment = list.get(0);
                 List<LinkedCaseInsensitiveMap> questions = this.getQuesWithOptByRcAssId(Long.parseLong(assessment.get("assessment_id").toString()));
@@ -646,7 +661,6 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     @Override
                     public void run() {
                         List<LinkedCaseInsensitiveMap> list = studentAssessmentRepo.getAssessmentDetailsByUserAssessmentId(userId, assessmentId);
-                        System.out.println("List" + list);
                         if ((list == null) || (list.isEmpty())) {
                             StudentAssessment assessment = new StudentAssessment();
 
@@ -680,7 +694,6 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             });
                             assessment.setDetail_list(detailList);
                             studentAssessmentRepo.save(assessment);
-                            System.out.println("List2" + list);
 
                             Map result = calculateResult(userId, assessmentId);
                             int totalMcqMarks = Integer.parseInt(result.get("totalNoOfQuestion").toString());
@@ -697,7 +710,6 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             assessment.setCreatedBy(userId.toString());
                             assessment.setLastModifiedBy(userId.toString());
                             StudentAssessment stdntAss = save(assessment);
-                            System.out.println("List3" + list);
 
                             studentAnswerTrackRepository.deleteByStudentId(userId);
                             try {
@@ -743,11 +755,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                                 logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex);
                             }
 
-//                            StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
-//                            stdntFdbck.setStudent_id(userId);
-//                            stdntFdbck.setStatus("Assessment Completed");
-//                            stdntFdbck.setProgress_percentage(Long.parseLong("25"));
-//                            studentInterviewFeedbackRepository.save(stdntFdbck);
+// 
                             StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
                             stdntFdbck.setStudent_id(userId);
                             stdntFdbck.setStatus("Assessment Completed");
@@ -827,8 +835,12 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         if (map.containsKey("remarks") && map.get("remarks") != null) {
             remarks = map.get("remarks").toString();
         }
+        Long jobPortalId = 0l;
         int counter = Integer.parseInt(map.get("counter").toString());
-        Long jobPortalId = Long.parseLong(map.get("jobPortalId").toString());
+        if (map.containsKey("jobPortalId") && map.get("jobPortalId") != null) {
+            jobPortalId = Long.parseLong(map.get("jobPortalId").toString());
+        }
+
         Long assessmentId = Long.parseLong(map.get("assessmentId").toString());
         Long studentId = Long.parseLong(map.get("user_id").toString());
         List<LinkedCaseInsensitiveMap> questWithOptions = this.getQuesWithOptByRcAssId(assessmentId);
@@ -843,7 +855,9 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             studentAssessment.setEndTime(new Date());
             studentAssessment.setCreatedBy(map.get("user_id").toString());
             studentAssessment.setCreatedDate(new Date());
-            studentAssessment.setJobPortalId(jobPortalId);
+            if (jobPortalId != 0) {
+                studentAssessment.setJobPortalId(jobPortalId);
+            }
             if (remarks != null) {
                 studentAssessment.setRemarks(remarks);
             } else {
@@ -877,33 +891,32 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 studentAssessment.setMcqPercentage(mcqPercentage);
                 studentAssessment.setTotalPercentage(mcqPercentage);
             }
+            if (map.containsKey("directAss") && map.get("directAss") != null) {
+                studentAssessment.setDirectAss(Boolean.parseBoolean(map.get("directAss").toString()));
+            } else {
+                studentAssessment.setDirectAss(Boolean.FALSE);
+            }
             StudentAssessment stAssess = save(studentAssessment);
+
+            result.put("correct_questions", stAssess.getCorrect_questions());
+            result.put("total_questions", stAssess.getTotal_no_of_questions());
             //save topic wise scores
             try {
                 LinkedCaseInsensitiveMap assess = new LinkedCaseInsensitiveMap();
                 assess.put("student_assessment_id", stAssess.getStudent_assessment_id());
                 assess.put("assessment_id", stAssess.getAssessment_id());
-                assess.put("student_id", stAssess.getStudent_id());
                 assess.put("total_questions", stAssess.getTotal_no_of_questions());
-                new Thread(() -> {
-                    Map topics = studentAssessmentService.getTopicScores(assess);
-                    if (topics.get("status").toString().equals("success")) {
-                        List<LinkedCaseInsensitiveMap> topicsList = (List<LinkedCaseInsensitiveMap>) topics.get("report");
-                        List<StudentTopicScores> sts = new ArrayList<>();
-                        for (LinkedCaseInsensitiveMap topic : topicsList) {
-                            StudentTopicScores s = new StudentTopicScores(stAssess.getStudent_id(), stAssess.getAssessment_id(), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString()));
-                            s.setCreatedDate(new Date());
-                            s.setCreatedBy(stAssess.getStudent_id().toString());
-                            s.setLastModifiedBy(stAssess.getStudent_id().toString());
-                            s.setLastModifiedDate(new Date());
-                            sts.add(s);
+                LinkedCaseInsensitiveMap topicWiseScores = this.getTopicWiseScoresForStudent(assess);
+                List<StudentTopicScores> scores = new ArrayList<>();
+                if (topicWiseScores != null) {
+                    if (topicWiseScores.containsKey("topicWiseScore") && topicWiseScores.get("topicWiseScore") != null) {
+                        List<LinkedCaseInsensitiveMap> topicScores = (List<LinkedCaseInsensitiveMap>) topicWiseScores.get("topicWiseScore");
+                        for (LinkedCaseInsensitiveMap topic : topicScores) {
+                            scores.add(new StudentTopicScores(Long.parseLong(map.get("user_id").toString()), stAssess.getAssessment_id(), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
                         }
-                        scoresService.saveAll(sts);
-                    } else {
-                        logger.error("Problem in saveAssessment() :: getTopicScores does not return success");
+                        studentTopicScoresRepo.saveAll(scores);
                     }
-                }).start();
-
+                }
                 //Send assessment notification
 //                this.assessmentNotification(map);
             } catch (Exception ex) {
@@ -1623,4 +1636,74 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         return resultMap;
     }
+
+    @Override
+    public LinkedCaseInsensitiveMap getTopicWiseScoresForStudent(LinkedCaseInsensitiveMap stdntAssessment) {
+        LinkedCaseInsensitiveMap stdntTopicScores = new LinkedCaseInsensitiveMap();
+        List<LinkedCaseInsensitiveMap> stdntTopicWiseScores = new ArrayList<>();
+        if (stdntAssessment != null) {
+            stdntTopicScores.put("haveCoding", 0);
+            Map<String, LinkedCaseInsensitiveMap> topicWiseScores = new HashMap<>();
+            if (stdntAssessment.containsKey("student_assessment_id") && stdntAssessment.get("student_assessment_id") != null
+                    && stdntAssessment.containsKey("assessment_id") && stdntAssessment.get("assessment_id") != null) {
+                List<LinkedCaseInsensitiveMap> associatesQuestionStatus = userMasterRepository.stdntQuestionStatus(Long.parseLong(stdntAssessment.get("student_assessment_id").toString()));
+                Long checkCodingCount = associatesQuestionStatus.stream().filter(data -> Long.parseLong(data.get("question_type_id").toString()) == 2).count();
+                if (checkCodingCount > 0) {
+                    stdntTopicScores.put("haveCoding", 1);
+                }
+                if (!associatesQuestionStatus.isEmpty() && associatesQuestionStatus.size() > 0) {
+                    associatesQuestionStatus.stream().forEach(data -> {
+                        if (!topicWiseScores.containsKey(data.get("topic_name").toString())) {
+                            LinkedCaseInsensitiveMap topicCount = new LinkedCaseInsensitiveMap();
+                            if (data.get("answer") != null && data.get("answer").toString().equalsIgnoreCase("Y")) {
+                                topicCount.put("correct_questions", 1);
+                            } else {
+                                topicCount.put("correct_questions", 0);
+                            }
+                            topicCount.put("total_questions", 1);
+                            topicWiseScores.put(data.get("topic_name").toString(), topicCount);
+                        } else {
+                            LinkedCaseInsensitiveMap topicWiseCount = topicWiseScores.get(data.get("topic_name").toString());
+                            if (topicWiseCount != null) {
+                                if (data.get("answer") != null && data.get("answer").toString().equalsIgnoreCase("Y")) {
+                                    topicWiseCount.put("correct_questions", Integer.parseInt(topicWiseCount.get("correct_questions").toString()) + 1);
+                                }
+                                topicWiseCount.put("total_questions", Integer.parseInt(topicWiseCount.get("total_questions").toString()) + 1);
+                            }
+                            topicWiseScores.put(data.get("topic_name").toString(), topicWiseCount);
+                        }
+                    });
+                }
+            }
+            if (!topicWiseScores.isEmpty()) {
+                topicWiseScores.forEach((key, value) -> {
+                    LinkedCaseInsensitiveMap questionsCount = new LinkedCaseInsensitiveMap();
+                    LinkedCaseInsensitiveMap questions = (LinkedCaseInsensitiveMap) value;
+                    questionsCount.put("topicName", key);
+                    questionsCount.put("correct_questions", questions.get("correct_questions").toString());
+                    questionsCount.put("total_questions", questions.get("total_questions").toString());
+                    questionsCount.put("average", Math.round(((Float.parseFloat(questions.get("correct_questions").toString()) / Float.parseFloat(questions.get("total_questions").toString())) * 100)));
+
+                    stdntTopicWiseScores.add(questionsCount);
+                });
+            }
+            stdntTopicScores.put("assessmentId", stdntAssessment.get("assessment_id").toString());
+            stdntTopicScores.put("topicWiseScore", stdntTopicWiseScores);
+        }
+        return stdntTopicScores;
+    }
+
+    @Override
+    public Map getCandidateByAssId(Map map) {
+        Map resultSet = new HashMap();
+        if (map.containsKey("assessmentId") && map.containsKey("organizationId") && map.get("assessmentId") != null && map.get("organizationId") != null) {
+            List<LinkedCaseInsensitiveMap> candidates = studentMasterRepository.getCandidateByAssId(Long.parseLong(map.get("assessmentId").toString()), Long.parseLong(map.get("organizationId").toString()));
+            resultSet.put("status", "success");
+            resultSet.put("candidates", candidates);
+        } else {
+            throw new NullPointerException("Please Provide a Valid Key or Value !!");
+        }
+        return resultSet;
+    }
+
 }
