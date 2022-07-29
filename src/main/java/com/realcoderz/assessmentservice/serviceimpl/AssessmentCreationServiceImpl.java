@@ -901,6 +901,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             result.put("correct_questions", stAssess.getCorrect_questions());
             result.put("total_questions", stAssess.getTotal_no_of_questions());
             //save topic wise scores
+            List<LinkedCaseInsensitiveMap> topicScores = new ArrayList<>();
             try {
                 LinkedCaseInsensitiveMap assess = new LinkedCaseInsensitiveMap();
                 assess.put("student_assessment_id", stAssess.getStudent_assessment_id());
@@ -910,7 +911,8 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 List<StudentTopicScores> scores = new ArrayList<>();
                 if (topicWiseScores != null) {
                     if (topicWiseScores.containsKey("topicWiseScore") && topicWiseScores.get("topicWiseScore") != null) {
-                        List<LinkedCaseInsensitiveMap> topicScores = (List<LinkedCaseInsensitiveMap>) topicWiseScores.get("topicWiseScore");
+                        topicScores = (List<LinkedCaseInsensitiveMap>) topicWiseScores.get("topicWiseScore");
+
                         for (LinkedCaseInsensitiveMap topic : topicScores) {
                             scores.add(new StudentTopicScores(Long.parseLong(map.get("user_id").toString()), stAssess.getAssessment_id(), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
                         }
@@ -922,6 +924,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             } catch (Exception ex) {
                 logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex);
             }
+            result.put("topicScores", topicScores);
         } else {
             result.put("msg", "Assessment not exist.");
             result.put("status", "error");
