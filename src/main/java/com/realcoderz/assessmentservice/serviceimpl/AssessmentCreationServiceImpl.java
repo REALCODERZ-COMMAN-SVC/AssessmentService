@@ -73,6 +73,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import jdk.nashorn.internal.objects.Global;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,80 +90,80 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
  */
 @Service
 public class AssessmentCreationServiceImpl implements AssessmentCreationService {
-
+    
     static final Logger logger = LoggerFactory.getLogger(AssessmentCreationServiceImpl.class);
-
+    
     @Autowired
     UserMasterRepository userMasterRepository;
-
+    
     @Autowired
     AssessmentCreationRepository assessmentCreationRepository;
-
+    
     @Autowired
     LanguageMasterRepository languageMasterRepository;
-
+    
     @Autowired
     StudentAssessmentRepository studentAssessmentRepo;
-
+    
     @Autowired
     QuestionMasterRepository questionMasterRepository;
-
+    
     @Autowired
     StudentInterviewFeedbackRepository studentInterviewFeedbackRepository;
-
+    
     @Autowired
     QuestionOptionMappingRepository questionOptionMappingRepository;
-
+    
     @Autowired
     private StudentTopicScoresRepo scoresService;
-
+    
     @Autowired
     private StudentAssessmentService studentAssessmentService;
-
+    
     @Autowired
     private StudentAnswerTrackRepository studentAnswerTrackRepository;
-
+    
     @Autowired
     private StudentMasterRepository studentMasterRepository;
-
+    
     @Autowired
     private CandidateStatusRepository candidateStatusRepository;
-
+    
     @Autowired
     private StudentInterviewFeedbackRepository stdntFdbckrepo;
-
+    
     @Autowired
     private CodingQuestionTestCaseRepository testCaseRepo;
-
+    
     @Autowired
     AssessmentCodingMarksRepository codeMarksRepository;
-
+    
     ObjectMapper mapper = new ObjectMapper();
-
+    
     @Value("${compiler_url}")
     private String compilerUrl;
-
+    
     @Value("${sonar_url}")
     private String sonarUrl;
-
+    
     @Value("${sonar_login}")
     private String sonarLogin;
-
+    
     @Value("${sonar_password}")
     private String sonarPassword;
-
+    
     @Autowired
     private StudentFeedbackService studentFeedBackService;
-
+    
     @Autowired
     AssessmentTextDetailsRepository assessmentDetailsRepo;
-
+    
     @Autowired
     AssessmentCodingDetailsRepository codeDetailsRepository;
-
+    
     @Autowired
     StudentTopicScoresRepo studentTopicScoresRepo;
-
+    
     @Override
     public Map add(Map map) {
         Map resultSet = new HashMap();
@@ -183,9 +184,9 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             assessmentCreation.setDetailForm(Boolean.parseBoolean(map.get("detailForm").toString()));
             assessmentCreation.setMediaUpload(Boolean.parseBoolean(map.get("mediaUpload").toString()));
             assessmentCreation.setWebcam(Boolean.parseBoolean(map.get("webcam").toString()));
-
+            
             List<LinkedHashMap> topicWiseData = (List<LinkedHashMap>) map.get("randomTopics");
-
+            
             for (LinkedHashMap topic : topicWiseData) {
                 if (topic.containsKey("selectedMCQQuestion")) {
                     if (Integer.parseInt(topic.get("selectedMCQQuestion").toString()) > 0) {
@@ -199,7 +200,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             questions.forEach(a -> {
                 a.setAssessmentCreation(assessmentCreations);
             });
-
+            
             assessmentCreation = assessmentCreationRepository.save(assessmentCreation);
             resultSet.put("status", "success");
             resultSet.put("data", assessmentCreation);
@@ -208,34 +209,34 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         return resultSet;
     }
-
+    
     @Override
     public AssessmentCreation findById(Long id) {
         return assessmentCreationRepository.findById(id).orElseThrow(() -> new EntiryNotFoundException("Assessment not exist with id :" + id));
     }
-
+    
     @Override
     public void delete(AssessmentCreation ac) {
         assessmentCreationRepository.delete(ac);
     }
-
+    
     @Override
     public List<LinkedCaseInsensitiveMap> assessments(Map map) {
         return assessmentCreationRepository.assessments();
     }
-
+    
     @Override
     public List<LinkedCaseInsensitiveMap> getUserAssessmentByUserAssessmentId(Long user_id, Long assessment_id) {
         return assessmentCreationRepository.getAssociatesAssessmentName(user_id, assessment_id);
     }
-
+    
     @Override
     public List<LinkedCaseInsensitiveMap> getTopicsForRanAssess(Map map) {
         List<Long> language_ids = new ArrayList<>();
         if (map.containsKey("language_id") && map.get("language_id") != null) {
             language_ids = (List<Long>) map.get("language_id");
         }
-
+        
         Long difficulty_id = Long.parseLong(map.get("difficulty_id").toString());
         Long organizationId = Long.parseLong(map.get("organizationId").toString());
         List<LinkedCaseInsensitiveMap> resultList = new LinkedList<>();
@@ -265,7 +266,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         return resultList;
     }
-
+    
     @Override
     public Map findRanAssess(Map map) {
         Long assessmentId = Long.parseLong(map.get("id").toString());
@@ -273,7 +274,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         List<LinkedCaseInsensitiveMap> returnList2 = new LinkedList<>();
         LinkedCaseInsensitiveMap skills = new LinkedCaseInsensitiveMap();
         Map returnMap = new HashMap();
-
+        
         List<LinkedCaseInsensitiveMap> assessmentDetails = assessmentCreationRepository.assessmentDetails(assessmentId);
         Long language_id = Long.parseLong(assessmentDetails.get(0).get("language_id").toString());
         List<Long> languages = Arrays.asList(language_id);
@@ -298,10 +299,10 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 returnList1.get(list.get(0).get("topicName").toString() + " "
                         + list.get(0).get("questionType").toString()).add(list.get(0).get("topicId").toString());
             }
-
+            
         });
         List<Long> skillsId = new ArrayList<>();
-
+        
         List<LinkedCaseInsensitiveMap> allRandomTopics = assessmentCreationRepository.getTopicsForRanAssess(languages, difficulty_id, organizationId);
         allRandomTopics.stream().forEach(allTopic -> {
             final StringBuffer sb = new StringBuffer();
@@ -335,12 +336,12 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         returnMap.put("skills", skills);
         return returnMap;
     }
-
+    
     @Override
     public AssessmentCreation update(Map map) {
-
+        
         AssessmentCreation assessmentCreation = assessmentCreationRepository.findById(Long.parseLong(map.get("rcassessment_id").toString())).orElseThrow(() -> new EntiryNotFoundException("Assessment not exist with id :" + Long.parseLong(map.get("rcassessment_id").toString())));
-
+        
         Set<QuestionMaster> questions = new HashSet();
         Set<AssessmentCreation> assessmentCreations = new HashSet<>();
         assessmentCreation.setLanguage_id(Long.parseLong(map.get("language_id").toString()));
@@ -371,22 +372,22 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         AssessmentCreation saveAss = assessmentCreationRepository.save(assessmentCreation);
         return saveAss;
     }
-
+    
     @Override
     public List<LinkedCaseInsensitiveMap> allAssessmentsList(Map<String, Object> map) {
         return assessmentCreationRepository.allAssessmentsList(Long.parseLong(map.get("organizationId").toString()));
     }
-
+    
     @Override
     public Map verifyCode(Map map) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
     public Map assessmentList(Map map) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     public List<LinkedCaseInsensitiveMap> getTopicWiseScoresForAssociates(Long userId, List<LinkedCaseInsensitiveMap> assessmentIds) {
         List<LinkedCaseInsensitiveMap> topicWiseAssessmentsScores = new ArrayList<>();
         assessmentIds.stream().forEach((data) -> {
@@ -394,15 +395,15 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             assessmentTopicWiseAss.put("havingCoding", "0");
             List<LinkedCaseInsensitiveMap> userAssessments = new LinkedList<>();
             LinkedCaseInsensitiveMap details = new LinkedCaseInsensitiveMap();
-
+            
             List<LinkedCaseInsensitiveMap> correctQuestions = userMasterRepository.getCorrectQuestions(Long.parseLong(data.get("user_assessment_id").toString()));
             details.put("user_assessment_id", data.get("user_assessment_id").toString());
             details.put("correctQuestionId", correctQuestions);
             details.put("totalQuestion", data.get("total_questions").toString());
             details.put("assessment_id", data.get("assessment_id").toString());
-
+            
             userAssessments.add(details);
-
+            
             Map<String, Integer> topicTotalCount = new HashMap();
             Map<String, Integer> topicCorrectTotalCount = new HashMap();
             userAssessments.stream().forEach(userAss -> {
@@ -420,20 +421,20 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 });
                 topicWithIds.entrySet().stream().forEach(topic -> {
                     List<LinkedCaseInsensitiveMap> totalCount = assessmentCreationRepository.totalQuestionOfTopic(Long.parseLong(topic.getValue().get(0)), Long.parseLong(userAss.get("assessment_id").toString()));
-
+                    
                     if (!topicCorrectTotalCount.containsKey(topic.getKey())) {
                         topicCorrectTotalCount.put(topic.getKey(), topic.getValue().size());
                     } else {
                         topicCorrectTotalCount.put(topic.getKey(), (topicCorrectTotalCount.get(topic.getKey()) + topic.getValue().size()));
                     }
-
+                    
                     if (!topicTotalCount.containsKey(topic.getKey())) {
                         topicTotalCount.put(topic.getKey(), Integer.parseInt(totalCount.get(0).get("topicCount").toString()));
                     } else {
                         topicTotalCount.put(topic.getKey(), (topicTotalCount.get(topic.getKey()) + Integer.parseInt(totalCount.get(0).get("topicCount").toString())));
                     }
                 });
-
+                
             });
             List<LinkedCaseInsensitiveMap> average = new LinkedList<>();
             topicCorrectTotalCount.entrySet().stream().forEach(correct -> {
@@ -445,7 +446,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             map.put("average", Math.round(((Float.parseFloat(correct.getValue().toString()) / Float.parseFloat(total.getValue().toString())) * 100)));
                             average.add(map);
                         }
-
+                        
                     }
                 });
             });
@@ -476,7 +477,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                         if (wrongTopics.contains(mp.get("topicName").toString())) {
                             wrongTopics.remove(mp.get("topicName").toString());
                         }
-
+                        
                     }
                 });
             });
@@ -486,25 +487,25 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 mp.put("average", "0");
                 returnList.add(mp);
             });
-
+            
             assessmentTopicWiseAss.put("assessmentId", data.get("assessment_id").toString());
             assessmentTopicWiseAss.put("topicWiseScore", returnList);
             topicWiseAssessmentsScores.add(assessmentTopicWiseAss);
         });
         return topicWiseAssessmentsScores;
     }
-
+    
     @Override
     public String getLangName(Long language_id) {
         return languageMasterRepository.getLangName(language_id);
     }
-
+    
     @Override
     public Map getAssessmentByBatchAssociateId(Long batchId, Long associateId) {
         Map map = new HashMap();
         List<LinkedCaseInsensitiveMap> allAssessments = assessmentCreationRepository.getAssessmentByBatchAssociateId(batchId, associateId);
         List<LinkedCaseInsensitiveMap> learningRecommendAndLanguage = new ArrayList<>();
-
+        
         if (allAssessments != null && allAssessments.size() > 0) {
             allAssessments.stream().forEach(assessment -> {
                 Integer assessResumeCount = assessmentCreationRepository.countForResumeTest(Long.parseLong(assessment.get("assessment_id").toString()), associateId);
@@ -513,11 +514,11 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 String[] a = attendedValue.split(" ");
                 List<Long> ids = assessmentCreationRepository.findQuestionIds(Long.parseLong(assessment.get("assessment_id").toString()));
                 ids.parallelStream().forEach(qId -> {
-
+                    
                     LinkedCaseInsensitiveMap totalQuestionAndCorrectQuestion = new LinkedCaseInsensitiveMap();
                     List<LinkedCaseInsensitiveMap> list = assessmentCreationRepository.findTnameAndQCount(qId);
                     String correctQuestions = "";
-
+                    
                     if (assessment.get("attended") != null) {
                         correctQuestions = assessmentCreationRepository.findQuestionCorrectOrNot(Long.parseLong(assessment.get("assessment_id").toString()), associateId, qId);
                         if (correctQuestions != null && correctQuestions.equalsIgnoreCase("Y")) {
@@ -550,7 +551,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             totalQuestionAndCorrectQuestion.put("correct_questions", 0);
                             totalQuestionAndCorrectQuestion.put("total_questions", 1);
                             totalQuestionAndCorrectQuestion.put("attended", "N");
-
+                            
                             topicNames.put(list.get(0).get("topicName").toString(), totalQuestionAndCorrectQuestion);
                         } else {
                             totalQuestionAndCorrectQuestion.put("total_questions", Integer.parseInt(topicNames.get(list.get(0).get("topicName")).get("total_questions").toString()) + 1);
@@ -559,7 +560,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             topicNames.put(list.get(0).get("topicName").toString(), totalQuestionAndCorrectQuestion);
                         }
                     }
-
+                    
                 });
                 List<LinkedCaseInsensitiveMap> topicNameAndScore = new ArrayList<>();
                 List<String> topics = new ArrayList<>();
@@ -607,7 +608,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         map.put("learning_recommendation", learningRecommendAndLanguage.parallelStream().distinct().collect(Collectors.toList()));
         return map;
     }
-
+    
     public List<LinkedCaseInsensitiveMap> getQuesWithOptByRcAssId(Long rcAssId) {
         List<LinkedCaseInsensitiveMap> fetchQuestionList = questionMasterRepository.findByRcAssId(rcAssId);
         List<LinkedCaseInsensitiveMap> questionListWithOptions = new ArrayList<>();
@@ -623,7 +624,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         });
         return questionListWithOptions;
     }
-
+    
     @Override
     public LinkedCaseInsensitiveMap getQuiz(Long user_id, Long jobportalId, Long organizationId, Long assessmntId) {
         LinkedCaseInsensitiveMap resultMap = new LinkedCaseInsensitiveMap();
@@ -656,16 +657,16 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 final Date startTime = new Date();
                 final Integer totalQue = questions.size();
                 final AssessmentCreation stdntAssessment = assessmentCreationRepository.findById(assessmentId).get();
-
+                
                 TimerTask task = new TimerTask() {
                     @Override
                     public void run() {
                         List<LinkedCaseInsensitiveMap> list = studentAssessmentRepo.getAssessmentDetailsByUserAssessmentId(userId, assessmentId);
                         if ((list == null) || (list.isEmpty())) {
                             StudentAssessment assessment = new StudentAssessment();
-
+                            
                             Set<StudentAssessmentDetails> detailList = new HashSet<>();
-
+                            
                             Set<QuestionMaster> questionList = stdntAssessment.getQuestion_list();
                             assessment.setStudent_id(userId);
                             assessment.setAssessment_id(assessmentId);
@@ -694,7 +695,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             });
                             assessment.setDetail_list(detailList);
                             studentAssessmentRepo.save(assessment);
-
+                            
                             Map result = calculateResult(userId, assessmentId);
                             int totalMcqMarks = Integer.parseInt(result.get("totalNoOfQuestion").toString());
                             int totalMcqScore = Integer.parseInt(result.get("correctQuestion").toString());
@@ -710,7 +711,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                             assessment.setCreatedBy(userId.toString());
                             assessment.setLastModifiedBy(userId.toString());
                             StudentAssessment stdntAss = save(assessment);
-
+                            
                             studentAnswerTrackRepository.deleteByStudentId(userId);
                             try {
                                 LinkedCaseInsensitiveMap assess = new LinkedCaseInsensitiveMap();
@@ -780,14 +781,14 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 resultMap.put("assessment", result);
                 resultMap.put("status", "success");
             }
-
+            
         } else {
             resultMap.put("msg", "User not exist.");
             resultMap.put("status", "error");
         }
         return resultMap;
     }
-
+    
     private StudentAssessment save(StudentAssessment studentAssessment) {
         return studentAssessmentRepo.save(studentAssessment);
     }
@@ -796,32 +797,37 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     @Override
     public void saveStudentFeedBack(Map map) {
         //Save Student Feedback
-        StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
-        stdntFdbck.setStatus("Assessment Completed");
-        stdntFdbck.setScholarship("In Process");
-        Long no_of_round = stdntFdbckrepo.getInterviewRounds(Long.parseLong(map.get("user_id").toString()));
-        if (no_of_round == Long.parseLong("1")) {
-            stdntFdbck.setProgress_percentage(Long.parseLong("50"));
-        } else if (no_of_round == Long.parseLong("3")) {
-            stdntFdbck.setProgress_percentage(Long.parseLong("20"));
-        } else {
-            stdntFdbck.setProgress_percentage(Long.parseLong("25"));
-
-        }
-        stdntFdbck.setStudent_id(Long.parseLong(map.get("user_id").toString()));
-        stdntFdbck.setScholarship("In Process");
-        stdntFdbck.setCreatedDate(new Date());
-        stdntFdbck.setCreatedBy(map.get("user_id").toString());
-        stdntFdbck.setLastModifiedBy(map.get("user_id").toString());
-        stdntFdbck.setLastModifiedDate(new Date());
-        stdntFdbck.setJob_portal_id(Long.parseLong(map.get("jobPortalId").toString()));
-        if (map.containsKey("organization_name") && map.get("organization_name") != null) {
-            Long organizationId = stdntFdbckrepo.findOrganizationIdByName(map.get("organization_name").toString());
-            if (organizationId != null) {
-                stdntFdbck.setOrganizationId(organizationId);
+        try {
+            StudentInterviewFeedBack stdntFdbck = new StudentInterviewFeedBack();
+            stdntFdbck.setStatus("Assessment Completed");
+            stdntFdbck.setScholarship("In Process");
+            Long no_of_round = stdntFdbckrepo.getInterviewRounds(Long.parseLong(map.get("user_id").toString()));
+            if (no_of_round == Long.parseLong("1")) {
+                stdntFdbck.setProgress_percentage(Long.parseLong("50"));
+            } else if (no_of_round == Long.parseLong("3")) {
+                stdntFdbck.setProgress_percentage(Long.parseLong("20"));
+            } else {
+                stdntFdbck.setProgress_percentage(Long.parseLong("25"));
+                
             }
+            stdntFdbck.setStudent_id(Long.parseLong(map.get("user_id").toString()));
+            stdntFdbck.setScholarship("In Process");
+            stdntFdbck.setCreatedDate(new Date());
+            stdntFdbck.setCreatedBy(map.get("user_id").toString());
+            stdntFdbck.setLastModifiedBy(map.get("user_id").toString());
+            stdntFdbck.setLastModifiedDate(new Date());
+            stdntFdbck.setJob_portal_id(Long.parseLong(map.get("jobPortalId").toString()));
+            if (map.containsKey("organization_name") && map.get("organization_name") != null) {
+                Long organizationId = stdntFdbckrepo.findOrganizationIdByName(map.get("organization_name").toString());
+                if (organizationId != null) {
+                    stdntFdbck.setOrganizationId(organizationId);
+                }
+            }
+            stdntFdbckrepo.save(stdntFdbck);
+        } catch (Exception ex) {
+            logger.error("Error While Saving FeedBack !!!");
         }
-        stdntFdbckrepo.save(stdntFdbck);
+        
     }
 
     //Save Student Assessment
@@ -840,7 +846,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         if (map.containsKey("jobPortalId") && map.get("jobPortalId") != null) {
             jobPortalId = Long.parseLong(map.get("jobPortalId").toString());
         }
-
+        
         Long assessmentId = Long.parseLong(map.get("assessmentId").toString());
         Long studentId = Long.parseLong(map.get("user_id").toString());
         List<LinkedCaseInsensitiveMap> questWithOptions = this.getQuesWithOptByRcAssId(assessmentId);
@@ -897,10 +903,11 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 studentAssessment.setDirectAss(Boolean.FALSE);
             }
             StudentAssessment stAssess = save(studentAssessment);
-
+            
             result.put("correct_questions", stAssess.getCorrect_questions());
             result.put("total_questions", stAssess.getTotal_no_of_questions());
             //save topic wise scores
+            List<LinkedCaseInsensitiveMap> topicScores = new ArrayList<>();
             try {
                 LinkedCaseInsensitiveMap assess = new LinkedCaseInsensitiveMap();
                 assess.put("student_assessment_id", stAssess.getStudent_assessment_id());
@@ -910,7 +917,8 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 List<StudentTopicScores> scores = new ArrayList<>();
                 if (topicWiseScores != null) {
                     if (topicWiseScores.containsKey("topicWiseScore") && topicWiseScores.get("topicWiseScore") != null) {
-                        List<LinkedCaseInsensitiveMap> topicScores = (List<LinkedCaseInsensitiveMap>) topicWiseScores.get("topicWiseScore");
+                        topicScores = (List<LinkedCaseInsensitiveMap>) topicWiseScores.get("topicWiseScore");
+                        
                         for (LinkedCaseInsensitiveMap topic : topicScores) {
                             scores.add(new StudentTopicScores(Long.parseLong(map.get("user_id").toString()), stAssess.getAssessment_id(), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
                         }
@@ -922,21 +930,22 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             } catch (Exception ex) {
                 logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex);
             }
+            result.put("topicScores", topicScores);
         } else {
             result.put("msg", "Assessment not exist.");
             result.put("status", "error");
         }
-
+        
         return CompletableFuture.completedFuture(result);
-
+        
     }
-
+    
     private Map calculateResult(Long studentId, Long assessemntId) {
         Map resultMap = new HashMap();
         Set<LinkedCaseInsensitiveMap> rows = studentAssessmentRepo.getAssessmentResultByUserAssessmentId(studentId, assessemntId);
         if (rows != null) {
             Long countCorrectQuestions = rows.stream().filter(a -> a.get("sanswer").toString().equalsIgnoreCase(a.get("danswer").toString())).count();
-
+            
             resultMap.put("correctQuestion", countCorrectQuestions);
             resultMap.put("totalNoOfQuestion", rows.size());
             return resultMap;
@@ -944,7 +953,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             return Collections.EMPTY_MAP;
         }
     }
-
+    
     @Override
     public void saveAnswerDetails(Map map) {
         if (map.containsKey("aid") && map.containsKey("uid") && map.containsKey("qid") && map.containsKey("answer")) {
@@ -962,7 +971,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             }
         }
     }
-
+    
     @Override
     public LinkedCaseInsensitiveMap getTopicWiseScoresForAssociates(LinkedCaseInsensitiveMap userAssessment) {
         LinkedCaseInsensitiveMap associateTopicScores = new LinkedCaseInsensitiveMap();
@@ -1009,7 +1018,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     questionsCount.put("correct_questions", questions.get("correct_questions").toString());
                     questionsCount.put("total_questions", questions.get("total_questions").toString());
                     questionsCount.put("average", Math.round(((Float.parseFloat(questions.get("correct_questions").toString()) / Float.parseFloat(questions.get("total_questions").toString())) * 100)));
-
+                    
                     candidateTopicWiseScores.add(questionsCount);
                 });
             }
@@ -1018,7 +1027,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         return associateTopicScores;
     }
-
+    
     @Override
     public Map getAssociateTopicScores(Map map) {
         Map resultSet = new HashMap();
@@ -1061,32 +1070,32 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
     public void save(AssessmentCreation assessmentCreation) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
     public void update(Long id, AssessmentCreation assessmentCreation) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
     public Set<QuestionMaster> findQuestionsByTopicAndQuestionId(List<String> ids) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
     public List<LinkedCaseInsensitiveMap> getQuestionsForAssessment(Map map) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
     public void saveRanAssess(Map map) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
     public Map getCodingQuestion(String data) throws NullPointerException {
         logger.info("StudentAssessmentService getCodingQuestion :: Method execution started.");
         Map resultMap = new HashMap<>();
-
+        
         try {
             Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             logger.info("StudentAssessmentServiceImpl->getCodingQuestion() with request data :: " + map);
@@ -1127,10 +1136,10 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         logger.info("StudentAssessmentService getCodingQuestion :: Method execution completed.");
         return resultMap;
     }
-
+    
     @Override
     public Map saveAssessmentCodingDetails(String data) throws InvalidKey {
-
+        
         Map<String, Object> resultMap = new HashMap<String, Object>();
         try {
             Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -1145,13 +1154,13 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             //e.printStackTrace();
             resultMap.put("status", "exception");
             logger.info("StudentAssessmentServiceImpl->saveAssessmentCodingDetails () ::Exception Occured!!" + e);
-
+            
         }
-
+        
         logger.info("StudentAssessmentServiceImpl->saveAssessmentCodingDetails () :: resultMap is " + resultMap);
         return resultMap;
     }
-
+    
     private AssessmentCodingDetails validatingTestCases(Long qid, AssessmentCodingDetails acd, String lang, AssessmentCodingMarks acm) {
         List<CodingQuestionTestCases> list = testCaseRepo.findByQuestionMaster(qid);
         int testCaseSquence = 0;
@@ -1188,7 +1197,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         return acd;
     }
-
+    
     private String getLanguageIdByName(String language) {
         String id = null;
         if (language.equalsIgnoreCase("java")) {
@@ -1213,9 +1222,9 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             id = "81";
         }
         return id;
-
+        
     }
-
+    
     @Override
     public Map getCodingDetailsBasedOnAssId(String data) {
         Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -1255,18 +1264,18 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             resultMap.clear();
             logger.info(" StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId () :: Please Enter valid key.");
             resultMap.put("status", "Please enter valid key.");
-
+            
         } catch (NullPointerException iv) {
             resultMap.clear();
             logger.info(" StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId () :: Please provide some value.");
             resultMap.put("status", "Student email and organization can't be null");
-
+            
         } catch (IOException io) {
             io.printStackTrace();
             resultMap.clear();
             logger.info(" StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId () :: Input Formate Exception.");
             resultMap.put("status", "Input Formate Exception");
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             resultMap.clear();
@@ -1275,9 +1284,9 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         logger.info("StudentAssessmentServiceImpl->getCodingDetailsBasedOnAssId () :: resultMap is " + resultMap);
         return resultMap;
-
+        
     }
-
+    
     @Override
     public Map<String, Object> saveTextAssessment(Map<String, Object> map) {
         logger.info("StudentAssessmentServiceImpl -> saveTextAssessment() :: Method execution start with request data " + map);
@@ -1318,12 +1327,12 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
             result.put("msg", "Assessment not exist.");
             result.put("status", "error");
             logger.error("AssessmentCreationServiceImpl -> saveTextAssessment() ::  Assessment not exist. ");
-
+            
         }
         logger.info("AssessmentCreationServiceImpl -> saveTextAssessment() :: Method execution completed with response data " + result);
         return result;
     }
-
+    
     @Override
     public Map<String, Object> getTextAnswer(Map map) {
         Map<String, Object> result = new HashMap<>();
@@ -1337,7 +1346,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         return result;
     }
-
+    
     @Override
     public LinkedCaseInsensitiveMap getResultByUserId(Map map) {
         logger.info("StudentAssessmentServiceImpl -> getResultByUserId() ::  Method execution start with request data  ::  " + map);
@@ -1359,7 +1368,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         logger.info("StudentAssessmentServiceImpl -> getResultByUserId() ::  Method execution complete with response data ::  " + result);
         return result;
     }
-
+    
     private Map saveAssessmentCodingQuestion(Map map) {
         Map resultMap = new HashMap();
         if (map.containsKey("student_id") && map.containsKey("question_id") && map.containsKey("code_source") && map.containsKey("marks_id")) {
@@ -1397,7 +1406,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                         }
                     }
                 }
-
+                
             } else {
                 resultMap.clear();
                 resultMap.put("status", "Question id, Student id can't null");
@@ -1411,7 +1420,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         return resultMap;
     }
-
+    
     @Override
     public Map saveAndGetCodingScore(Map<String, Object> map) {
         Map resultSet = new HashMap();
@@ -1427,7 +1436,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     String language = questionMasterRepository.getLanguageNameById(questionId);
                     Optional<AssessmentCodingMarks> acm = codeMarksRepository.findById(codingMarksId);
                     if (acm.isPresent()) {
-
+                        
                         long uid = studentId;
                         List<AssessmentCodingDetails> listOfcodingDetails = codeDetailsRepository.findByUserQuestionId(uid, questionId);
                         if (listOfcodingDetails != null && !listOfcodingDetails.isEmpty()) {
@@ -1481,7 +1490,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                                         } else {
                                             p = processBuilder(pathDir, "scala", studentId.toString() + questionId);
                                         }
-
+                                        
                                         BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
                                         while (true) {
                                             String log = r.readLine();
@@ -1590,13 +1599,13 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                                     list.setScan(true);
                                 });
                                 codeDetailsRepository.saveAll(listOfcodingDetails);
-
+                                
                             }
                         }
-
+                        
                         resultSet.put("totalCodingScore", totalCodingScore);
                         resultSet.put("status", "succes");
-
+                        
                     } else {
                         logger.info("Assessment coding marks does not exist with this assessment: ");
                     }
@@ -1606,11 +1615,11 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 }
             }
         } catch (Exception ex) {
-
+            
         }
         return resultSet;
     }
-
+    
     private Process processBuilder(String pathDir, String language, String id) throws IOException {
         return new ProcessBuilder("sh", "-c", "sonar-scanner -Dsonar.host.url=" + sonarUrl + " -Dsonar.login=" + sonarLogin + " -Dsonar.password=" + sonarPassword
                 + "    -Dsonar.sources=" + pathDir + " "
@@ -1618,7 +1627,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 + "    -Dsonar.java.binaries=/classes "
                 + "    -Dsonar.projectKey=code_" + id).start();
     }
-
+    
     @Override
     public Map codingQuestionByLanguageId(Map<String, Object> map) {
         Map resultMap = new HashMap();
@@ -1633,11 +1642,11 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                 throw new NullPointerException("Please Provide a Valid Key or Value !!");
             }
         } catch (Exception ex) {
-
+            
         }
         return resultMap;
     }
-
+    
     @Override
     public LinkedCaseInsensitiveMap getTopicWiseScoresForStudent(LinkedCaseInsensitiveMap stdntAssessment) {
         LinkedCaseInsensitiveMap stdntTopicScores = new LinkedCaseInsensitiveMap();
@@ -1684,7 +1693,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
                     questionsCount.put("correct_questions", questions.get("correct_questions").toString());
                     questionsCount.put("total_questions", questions.get("total_questions").toString());
                     questionsCount.put("average", Math.round(((Float.parseFloat(questions.get("correct_questions").toString()) / Float.parseFloat(questions.get("total_questions").toString())) * 100)));
-
+                    
                     stdntTopicWiseScores.add(questionsCount);
                 });
             }
@@ -1693,7 +1702,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         return stdntTopicScores;
     }
-
+    
     @Override
     public Map getCandidateByAssId(Map map) {
         Map resultSet = new HashMap();
@@ -1706,5 +1715,5 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         return resultSet;
     }
-
+    
 }

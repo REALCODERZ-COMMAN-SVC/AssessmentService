@@ -828,6 +828,7 @@ public class AssessmentCreationController {
                 CompletableFuture<LinkedCaseInsensitiveMap> assessmentData = assessmentCreationService.saveAssessment(map);
                 resultMap.put("correct_questions", assessmentData.get().get("correct_questions"));
                 resultMap.put("total_questions", assessmentData.get().get("total_questions"));
+                resultMap.put("topicScores", assessmentData.get().get("topicScores"));
                 resultMap.put("status", "success");
 
             } else {
