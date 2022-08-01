@@ -843,7 +843,7 @@ public class AssessmentCreationServiceImpl implements AssessmentCreationService 
         }
         Long jobPortalId = 0l;
         int counter = Integer.parseInt(map.get("counter").toString());
-        if (map.containsKey("jobPortalId") && map.get("jobPortalId") != null && map.get("jobPortalId") != Global.undefined) {
+        if (map.containsKey("jobPortalId") && map.get("jobPortalId") != null) {
             jobPortalId = Long.parseLong(map.get("jobPortalId").toString());
         }
         
