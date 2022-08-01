@@ -24,6 +24,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -33,6 +36,7 @@ import org.hibernate.annotations.Parameter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "assessment_id")
 public class AssessmentCreation extends Auditable<String> implements Serializable {
 
@@ -70,21 +74,35 @@ public class AssessmentCreation extends Auditable<String> implements Serializabl
 
     @NotNull(message = "Time can't be empty")
     private Integer time;
+    private Boolean webcam;
+
+    private Boolean onScreen;
+
+    private Boolean onMail;
+
+    private Boolean onProfile;
+
+    private int proctCount;
+
+    private Boolean mediaUpload;
+
+    private Boolean detailForm;
 
 //    @NotNull(message = "Creation Type can't be empty")
     private String creation_type;
     @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinTable(name = "assessment_question", joinColumns = @JoinColumn(name = "assessment_id"), inverseJoinColumns = @JoinColumn(name = "question_id"))
     @OrderBy(value = "question_id ASC")
+    @EqualsAndHashCode.Exclude
     private Set<QuestionMaster> question_list;
-    
+
     private String assessmentTimeBound;
 
     @NotNull(message = "Active/Deactive can't be empty")
     private Character active;
     private Long organizationId;
 
-    public AssessmentCreation(Long assessment_id, String assessment_desc, Long event_id,String instructions, Long language_id,Long difficulty_id, Integer time, Set<QuestionMaster> question_list, Character active,String assessmentTimeBound) {
+    public AssessmentCreation(Long assessment_id, String assessment_desc, Long event_id, String instructions, Long language_id, Long difficulty_id, Integer time, Set<QuestionMaster> question_list, Character active, String assessmentTimeBound) {
         this.assessment_id = assessment_id;
         this.assessment_desc = assessment_desc;
         this.event_id = event_id;

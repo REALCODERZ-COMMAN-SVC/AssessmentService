@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,20 +65,24 @@ public class QuestionMasterController {
     @ApiOperation(value = "upload excel file data", response = QuestionMasterControllerPayload.class)
     @PostMapping(path = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public Map uploadExcelFileData(@RequestParam("file") MultipartFile file, @RequestParam("organizationId") Long organizationId, @RequestParam("questionTypeId") Long questionTypeId) {
+        logger.info("QuestionMasterController -> uploadExcelFileData() :: Method execution start successfully.");
         Map resultMap = new HashMap();
         try {
+            logger.info("QuestionMasterController -> uploadExcelFileData() :: Method execution start successfully with  request data : " + file + " and organization id  " + organizationId + " , question type id is " + questionTypeId);
             resultMap.put("data", questionMasterService.uploadQuestions(file, organizationId, questionTypeId));
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
             logger.error("Problem in QuestionMasterController -> uploadExcelFileData() :: ", ex);
         }
+        logger.info("QuestionMasterController -> uploadExcelFileData() :: Method execution completed successfully with response data :" + resultMap);
         return resultMap;
     }
 
     @ApiOperation(value = "excel save", response = QuestionMasterControllerPayload.class)
     @PostMapping(path = "/esave", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map excelSave(@RequestBody String data) {
+        logger.info("QuestionMasterController -> uploadExcelFileData() :: Method execution start successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -90,12 +93,14 @@ public class QuestionMasterController {
             resultMap.put("status", "exception");
             logger.error("Problem in QuestionMasterController -> excelSave() :: ", ex);
         }
+        logger.info("QuestionMasterController -> excelSave() :: Method execution completed successfully with response data :" + resultMap);
         return resultMap;
     }
 
     @ApiOperation(value = "Get question", response = QuestionMasterControllerPayload.class)
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map list(@RequestBody String data) {
+        logger.info("QuestionMasterController -> uploadExcelFileData() :: Method execution start successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -106,17 +111,19 @@ public class QuestionMasterController {
             resultMap.put("status", "error");
             logger.error("Problem in QuestionMasterController -> list() :: ", ex);
         }
+        logger.info("QuestionMasterController -> list() :: Method execution completed successfully with response data :" + resultMap);
         return resultMap;
     }
 
     @ApiOperation(value = "Add", response = QuestionMasterControllerPayload.class)
     @PostMapping(path = "/add", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map add(@RequestBody String data) {
+        logger.info("QuestionMasterController -> add() :: Method execution start successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("QuestionMasterController -> add() :: Method execution start successfully with request data : " + map);
             Map mpp = (Map) map.get("questionmasterdata");
-
             List<LinkedHashMap> list = (List<LinkedHashMap>) mpp.get("options_list");
             List<QuestionOptionMapping> options = new ArrayList<>();
             List<CodingQuestionTestCases> testCases = new ArrayList<>();
@@ -168,6 +175,7 @@ public class QuestionMasterController {
                 resultMap.clear();
                 resultMap.put("status", "error");
                 resultMap.put("msg", "There is already a question with the same question desc in selected mandatory field.!");
+                logger.info("QuestionMasterController -> add() :: Method execution completed successfully .There is already a question with the same question desc in selected mandatory field");
             }
 
         } catch (IOException | NumberFormatException ex) {
@@ -175,12 +183,16 @@ public class QuestionMasterController {
             resultMap.put("status", "exception");
             logger.error("Problem in QuestionMasterController -> add() :: ", ex);
         }
+        logger.info("QuestionMasterController -> add() :: Method execution completed successfully with response data :" + resultMap);
+
         return resultMap;
+
     }
 
     @ApiOperation(value = "Get by ID", response = QuestionMasterControllerPayload.class)
     @PostMapping(path = "/get", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map getById(@RequestBody String data) {
+        logger.info("QuestionMasterController -> uploadExcelFileData() :: Method execution start successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -203,12 +215,15 @@ public class QuestionMasterController {
             resultMap.put("status", "exception");
             logger.error("Problem in QuestionMasterController -> getById() :: ", ex);
         }
+        logger.info("QuestionMasterController -> getById() :: Method execution completed successfully with response data :" + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "Delete question", response = QuestionMasterControllerPayload.class)
     @PostMapping(path = "/delete", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map delete(@RequestBody String data) {
+        logger.info("QuestionMasterController -> delete() :: Method execution start successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -230,16 +245,20 @@ public class QuestionMasterController {
             resultMap.put("status", "exception");
             logger.error("Problem in QuestionMasterController -> delete() :: ", ex);
         }
+        logger.info("QuestionMasterController -> delete() :: Method execution completed successfully with response data :" + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "update question", response = QuestionMasterControllerPayload.class)
     @PostMapping(path = "/update", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map update(@RequestBody String data) {
+        logger.info("QuestionMasterController -> update() :: Method execution start successfully.");
         Map resultMap = new HashMap();
         try {
             Map mapp = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             Map mpp = (Map) mapp.get("questionmasterdata");
+            logger.info("QuestionMasterController -> update() :: Method execution start successfully with request data :" + mapp);
             QuestionMaster qm = mapper.convertValue(mpp, QuestionMaster.class);
             qm.setQuestion_id(Long.parseLong(mapp.get("id").toString()));
             if (qm.getQuestion_type_id() == 2) {
@@ -257,17 +276,22 @@ public class QuestionMasterController {
                 resultMap.clear();
                 resultMap.put("status", "error");
                 resultMap.put("msg", "There is already a question with the same question Desc.!");
+                logger.info("QuestionMasterController -> update() :: There is already a question with the same question Desc.!");
+
             }
         } catch (EntiryNotFoundException ex) {
             resultMap.clear();
             resultMap.put("status", "error");
             resultMap.put("msg", "Role not found !!");
-            logger.error("Problem in QuestionMasterController -> update() :: ", ex);
+            logger.info("QuestionMasterController -> update() :: There is already a question with the same question Desc.!");
+            logger.error("Problem in QuestionMasterController -> update() :: There is already a question with the same question Desc.! ", ex);
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
             logger.error("Problem in QuestionMasterController -> update() :: ", ex);
         }
+        logger.info("QuestionMasterController -> update() :: Method execution completed successfully with response data :" + resultMap);
+
         return resultMap;
     }
 

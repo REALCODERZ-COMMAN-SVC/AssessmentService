@@ -23,6 +23,8 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -34,6 +36,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class StudentMaster extends Auditable<String> implements Serializable {
 
     @Id

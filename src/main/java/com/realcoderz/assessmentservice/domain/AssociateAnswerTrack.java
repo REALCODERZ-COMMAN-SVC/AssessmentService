@@ -13,7 +13,7 @@ import javax.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
+import com.realcoderz.assessmentservice.auditable.Auditable;
 
 /**
  *
@@ -23,7 +23,6 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
 public class AssociateAnswerTrack extends Auditable<String> implements Serializable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

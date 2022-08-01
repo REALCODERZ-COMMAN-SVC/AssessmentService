@@ -18,6 +18,8 @@ import com.realcoderz.assessmentservice.domain.UserMaster;
 import com.realcoderz.assessmentservice.exceptions.EntiryNotFoundException;
 import com.realcoderz.assessmentservice.payload.SwaggerController.AssessmentCreationControllerPayload;
 import com.realcoderz.assessmentservice.payload.SwaggerController.RCAssessmentCreationControllerPayload;
+import com.realcoderz.assessmentservice.payload.SwaggerController.StudentAssessmentControllerPayload;
+import com.realcoderz.assessmentservice.repository.AssessmentCreationRepository;
 import com.realcoderz.assessmentservice.repository.AssociateAnswerTrackRepository;
 import com.realcoderz.assessmentservice.repository.AssociateValidateRepository;
 import com.realcoderz.assessmentservice.repository.QuestionMasterRepository;
@@ -47,6 +49,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -111,11 +116,16 @@ public class AssessmentCreationController {
     @Autowired
     private BatchMasterService batchMasterService;
 
+    @Autowired
+    private AssessmentCreationRepository assessmentCreationRepository;
+
     @PostMapping
     public Map list(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> list() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> list() :: Method started successfully with request data : " + map);
             resultMap.put("list", assessmentCreationService.assessments(map));
             resultMap.put("status", "success");
         } catch (Exception ex) {
@@ -123,96 +133,105 @@ public class AssessmentCreationController {
             resultMap.put("status", "error");
             logger.error("Problem in AssessmentCreationController -> list() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> list() :: Method completed successfully. With response date : " + resultMap);
         return resultMap;
     }
 
     @PostMapping(path = "/add", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     @ApiOperation(value = "Save assessment details", notes = "THIS METHOD IS USE TO SAVE ASSESSMENT DETAILS", response = AssessmentCreationControllerPayload.class)
     public Map add(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> add() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> add() :: Method started successfully with request data : " + map);
             resultMap = assessmentCreationService.add(map);
         } catch (Exception objException) {
             resultMap.clear();
             resultMap.put("status", objException);
-            logger.error("Problem in AssessmentCreationController -> add() :: ", objException);
+            logger.error("Problem in AssessmentCreationController -> add() :: ", objException.getMessage());
         }
+        logger.info("AssessmentCreationController -> add() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "All assessment list", response = AssessmentCreationControllerPayload.class)
     @PostMapping(path = "/all", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map allAssessmentList(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> allAssessmentList() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map<String, Object> map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> allAssessmentList() :: Method started successfully with request data :" + map);
             resultMap.put("list", assessmentCreationService.allAssessmentsList(map));
             resultMap.put("status", "success");
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "error");
-            logger.error("Problem in AssessmentCreationController -> allAssessmentList() :: ", ex);
+            logger.error("Problem in AssessmentCreationController -> allAssessmentList() :: ", ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> allAssessmentList() :: Method completed successfully with response date : " + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "Get by ID", response = RCAssessmentCreationControllerPayload.class)
     @PostMapping(path = "/get", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map getById(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> getById() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
-//            if (map.get("creation_type").toString() != null && map.get("creation_type").toString().equalsIgnoreCase("Random")) {
+            logger.info("AssessmentCreationController -> getById() :: Method started successfully with request data : " + map);
             resultMap.put("data", assessmentCreationService.findRanAssess(map));
             resultMap.put("status", "success");
-//            } 
-//            else
-//            
-//            {
-//                AssessmentCreation assessmentCreation = assessmentCreationService.findById(Long.parseLong(map.get("id").toString()));
-//                if (assessmentCreation != null) {
-//                    assessmentCreation.getQuestion_list().stream().forEach(q -> q.setAssessmentCreation(null));
-//                    resultMap.put("data", assessmentCreation);
-//                    resultMap.put("status", "success");
-//                }
-//            }
+
         } catch (EntiryNotFoundException ex) {
             resultMap.clear();
             resultMap.put("status", "error");
             resultMap.put("msg", "Assessment not found !!");
-            logger.error("Problem in AssessmentCreationController -> getById() :: ", ex);
+            logger.error("Problem in AssessmentCreationController -> getById() :: ", ex.getMessage());
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
-            logger.error("Problem in AssessmentCreationController -> getById() :: ", ex);
+            logger.error("Problem in AssessmentCreationController -> getById() :: ", ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> getById() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "Get topic for random assessment", response = RCAssessmentCreationControllerPayload.class)
     @PostMapping(path = "/getTopicsForRanAssess", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map getTopicsForAssessment(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> getTopicsForAssessment() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> getTopicsForAssessment() :: Method started successfully.");
             resultMap.put("list", assessmentCreationService.getTopicsForRanAssess(map));
+            logger.info("AssessmentCreationController -> getTopicsForAssessment() :: Method started successfully with requested data " + map);
             resultMap.put("status", "success");
         } catch (Exception ex) {
             ex.printStackTrace();
             resultMap.clear();
             resultMap.put("status", "exception");
-            logger.error("Problem in AssessmentCreationController -> getTopicsForRanAssess() :: " + ex);
+            logger.error("Problem in AssessmentCreationController -> getTopicsForRanAssess() :: " + ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> getTopicsForRanAssess() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @ApiOperation(value = "Save Random Assessment", response = RCAssessmentCreationControllerPayload.class)
     @PostMapping(path = "/update", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map update(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> update() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> update() :: Method started successfully with request data ::" + map);
             AssessmentCreation saveUpd = assessmentCreationService.update(map);
             if (saveUpd != null) {
                 resultMap.put("status", "success");
@@ -223,14 +242,17 @@ public class AssessmentCreationController {
             resultMap.clear();
             ex.printStackTrace();
             resultMap.put("status", "exception");
-            logger.error("Problem in AssessmentCreationController -> update() :: " + ex);
+            logger.error("Problem in AssessmentCreationController -> update() :: " + ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> update() :: Method completed successfully with response date : " + resultMap);
+
         return resultMap;
     }
 
 //    @ApiOperation(value = "Get assessment", response = TakingAssessmentControllerPayload.class)
     @PostMapping(path = "/assessment", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     public Map getAssessment(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> list() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -239,6 +261,7 @@ public class AssessmentCreationController {
             if (assessment != null && count.isEmpty()) {
                 LinkedCaseInsensitiveMap result = new LinkedCaseInsensitiveMap();
                 List<LinkedCaseInsensitiveMap> questions = new ArrayList<>();
+                Set topicList = new HashSet<>();
                 result.put("assessment_id", assessment.getAssessment_id());
                 result.put("assessment_desc", assessment.getAssessment_desc());
                 result.put("instructions", assessment.getInstructions());
@@ -247,12 +270,21 @@ public class AssessmentCreationController {
                 result.put("assessmentTimeBound", assessment.getAssessmentTimeBound());
                 assessment.getQuestion_list().stream().forEach(que -> {
                     LinkedCaseInsensitiveMap quest = new LinkedCaseInsensitiveMap();
+                    LinkedCaseInsensitiveMap topics = new LinkedCaseInsensitiveMap();
+
                     quest.put("question_id", que.getQuestion_id());
                     quest.put("question_type_id", que.getQuestion_type_id());
                     quest.put("question_desc", que.getQuestion_desc());
                     quest.put("codingTemplate", que.getCodingTemplate());
                     quest.put("no_of_answer", que.getNo_of_answer());
                     quest.put("questionTime", que.getQuestionTime());
+                    quest.put("topic_id", que.getTopic_id());
+                    quest.put("topic_Name", assessmentCreationRepository.topicNameById(que.getTopic_id()));
+                    topics.put("topic_id", que.getTopic_id());
+                    topics.put("topic_Name", assessmentCreationRepository.topicNameById(que.getTopic_id()));
+                    topics.put("count_no_of_question", assessmentCreationRepository.countNoOfQuestion(que.getTopic_id(), assessment.getOrganizationId(), assessment.getAssessment_id()));
+                    topicList.add(topics);
+
                     List<LinkedCaseInsensitiveMap> options = new ArrayList<>();
                     if (que.getOptions_list() != null) {
                         que.getOptions_list().stream().forEach(opt -> {
@@ -268,12 +300,16 @@ public class AssessmentCreationController {
                 });
                 Collections.shuffle(questions);
                 result.put("question_list", questions);
+                result.put("topic_list", topicList);
+                result.put("topic_wise_question", questions);
                 resultMap.put("assessment", result);
                 resultMap.put("status", "success");
             } else if (!count.isEmpty()) {
                 if (count.get(0).getAssessmentSubmit()) {
                     resultMap.put("msg", "Assessment already attempted!");
                     resultMap.put("status", "error");
+                    logger.info("AssessmentCreationController -> getAssessment() :: Assessment already attempted!: ");
+
                 } else {
                     resultMap = resumeTest(assessment, Long.parseLong(map.get("uid").toString()));
                 }
@@ -284,8 +320,10 @@ public class AssessmentCreationController {
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
-            logger.error("Problem in AssessmentCreationController -> getAssessment() :: ", ex);
+            logger.error("Problem in AssessmentCreationController -> getAssessment() :: ", ex.getMessage());
         }
+        logger.info("AssessmentCreationController -> getAssessment() :: Method completed successfully with response date : " + resultMap);
+
         return resultMap;
     }
 
@@ -387,26 +425,36 @@ public class AssessmentCreationController {
             UserAssessment userAss = userAssessmentService.saveUserAssessment(userAssessment);
             //To Calculate topic wise scores
             try {
-                List<LinkedCaseInsensitiveMap> assessments = new ArrayList<>();
-                LinkedCaseInsensitiveMap userIds = new LinkedCaseInsensitiveMap();
-                userIds.put("assessment_id", userAss.getAssessment_id());
-                userIds.put("user_assessment_id", userAss.getUser_assessment_id());
-                userIds.put("total_questions", userAss.getTotal_no_of_questions());
-                assessments.add(userIds);
-                new Thread(() -> {
-                    long userId = userAss.getUser_id();
-                    List<LinkedCaseInsensitiveMap> topicWiseScore = assessmentCreationServiceImpl.getTopicWiseScoresForAssociates(userId, assessments);
-                    if (topicWiseScore.size() > 0 && !topicWiseScore.isEmpty()) {
-                        List<AssociateTopicScores> scores = new ArrayList<>();
-                        for (LinkedCaseInsensitiveMap assess : topicWiseScore) {
-                            List<LinkedCaseInsensitiveMap> topicScore = (List<LinkedCaseInsensitiveMap>) assess.get("topicWiseScore");
-                            for (LinkedCaseInsensitiveMap topic : topicScore) {
-                                scores.add(new AssociateTopicScores(userId, Long.parseLong(assess.get("assessmentId").toString()), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
-                            }
+//                List<LinkedCaseInsensitiveMap> assessments = new ArrayList<>();
+                LinkedCaseInsensitiveMap userAssessments = new LinkedCaseInsensitiveMap();
+                userAssessments.put("assessment_id", userAss.getAssessment_id());
+                userAssessments.put("user_assessment_id", userAss.getUser_assessment_id());
+                userAssessments.put("total_questions", userAss.getTotal_no_of_questions());
+                LinkedCaseInsensitiveMap topicWiseScores = assessmentCreationService.getTopicWiseScoresForAssociates(userAssessments);
+                List<AssociateTopicScores> scores = new ArrayList<>();
+                if (topicWiseScores != null) {
+                    if (topicWiseScores.containsKey("topicWiseScore") && topicWiseScores.get("topicWiseScore") != null) {
+                        List<LinkedCaseInsensitiveMap> topicScores = (List<LinkedCaseInsensitiveMap>) topicWiseScores.get("topicWiseScore");
+                        for (LinkedCaseInsensitiveMap topic : topicScores) {
+                            scores.add(new AssociateTopicScores(Long.parseLong(map.get("user_id").toString()), userAss.getAssessment_id(), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
                         }
                         topicScoresService.saveAll(scores);
                     }
-                }).start();
+                }
+//                new Thread(() -> {
+//                    long userId = userAss.getUser_id();
+//                    List<LinkedCaseInsensitiveMap> topicWiseScore = assessmentCreationServiceImpl.getTopicWiseScoresForAssociates(userId, assessments);
+//                    if (topicWiseScore.size() > 0 && !topicWiseScore.isEmpty()) {
+//                        List<AssociateTopicScores> scores = new ArrayList<>();
+//                        for (LinkedCaseInsensitiveMap assess : topicWiseScore) {
+//                            List<LinkedCaseInsensitiveMap> topicScore = (List<LinkedCaseInsensitiveMap>) assess.get("topicWiseScore");
+//                            for (LinkedCaseInsensitiveMap topic : topicScore) {
+//                                scores.add(new AssociateTopicScores(userId, Long.parseLong(assess.get("assessmentId").toString()), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
+//                            }
+//                        }
+//                        topicScoresService.saveAll(scores);
+//                    }
+//                }).start();
             } catch (Exception ex) {
                 logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex);
             }
@@ -450,10 +498,13 @@ public class AssessmentCreationController {
     @PostMapping(path = "/allassessment", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
 //    @ApiOperation(value = "Resume upload", notes = "This method is use to upload resume in GCS",
 //            response = DashboardControllerPayload.class)
-    public Map getAssessmentForAssociates(@RequestBody String data) {
+    public Map getAssessmentForAssociates(@RequestBody String data
+    ) {
+        logger.info("AssessmentCreationController -> getAssessmentForAssociates() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> getAssessmentForAssociates() :: Method started successfully with ");
             List<LinkedCaseInsensitiveMap> batchList = batchMasterService.getBatchForAssociates(map);
             if (batchList != null && batchList.size() > 0) {
                 batchList.stream().forEach(batch -> {
@@ -472,117 +523,146 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> getAssessmentForAssociates() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> getAssessmentForAssociates() :: Method completed successfully with response date : " + resultMap);
+
         return resultMap;
     }
 //    @ApiOperation(value = "Set timer", response = TakingAssessmentControllerPayload.class)
+// this is when associate starts the test
 
     @PostMapping(path = "/settimer", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
-    public Map setTimer(@RequestBody String data) {
+    public Map setTimer(@RequestBody String data
+    ) {
+        logger.info("AssessmentCreationController -> setTimer() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             Long assessment_id = (map.containsKey("aid") ? Long.parseLong(map.get("aid") + "") : null);
             Long user_id = (map.containsKey("uid") ? Long.parseLong(map.get("uid") + "") : null);
-            if ((assessment_id != null) && (user_id != null)) {
+            Long orgId = (map.containsKey("orgId") ? Long.parseLong(map.get("uid").toString()) : null);
+            if ((assessment_id != null) && (user_id != null) && (orgId != null)) {
                 AssessmentCreation assessment = assessmentCreationService.findById(assessment_id);
                 if (assessment != null) {
-                    boolean assessmentSubmit = assessment.getAssessmentTimeBound().equalsIgnoreCase("assessmentTime");
-                    AssociateValidate av = new AssociateValidate(user_id, assessment_id, user_id, assessmentSubmit);
-                    associateValidtaeRepo.save(av);
-                    if (assessmentSubmit) {
-                        long timerInMiliSec = ((assessment.getTime() + 1) * 60 * 1000);
-                        Timer timer = new Timer("Assessment_Timer_For_" + user_id + "+" + assessment_id);
-                        final Long userId = user_id;
-                        final Long assessmentId = assessment_id;
-                        final Date startTime = new Date();
-                        TimerTask task = new TimerTask() {
-                            @Override
-                            public void run() {
-                                List<LinkedCaseInsensitiveMap> list = assessmentCreationService.getUserAssessmentByUserAssessmentId(userId, assessmentId);
-                                if ((list == null) || (list.isEmpty())) {
-                                    UserAssessment userAssessment = new UserAssessment();
-                                    Set<UserAssessmentDetails> detailList = new HashSet<>();
-                                    Set<QuestionMaster> questionList = assessment.getQuestion_list();
-                                    userAssessment.setUser_id(Long.parseLong(map.get("user_id").toString()));
-                                    userAssessment.setAssessment_id(assessment.getAssessment_id());
-                                    userAssessment.setStartTime(startTime);
-                                    userAssessment.setEndTime(new Date());
-                                    userAssessment.setCreatedBy(userId.toString());
-                                    userAssessment.setLastModifiedBy(userId.toString());
-                                    userAssessment.setRemarks("By Backend(Associates) -> Timer run out start at." + startTime + " and end at" + new Date());
-                                    List<LinkedCaseInsensitiveMap> selectedQuestions = associateAnswerRepo.findByAssociateIdAndAssessmentId(userId, assessmentId);
-                                    questionList.stream().forEach(question -> {
-                                        Optional<LinkedCaseInsensitiveMap> present = selectedQuestions.stream().filter(sq -> sq.get("questionId").toString().equalsIgnoreCase(question.getQuestion_id().toString())).findFirst();
-                                        UserAssessmentDetails details = new UserAssessmentDetails();
-                                        details.setUserAssessment(userAssessment);
-                                        details.setQuestion_id(question.getQuestion_id());
-                                        if (present.isPresent()) {
-                                            String answer = present.get().get("answer").toString();
-                                            details.setAnswer(answer);
-                                        } else {
-                                            details.setAnswer("");
-                                        }
-                                        detailList.add(details);
-                                    });
-                                    userAssessment.setDetail_list(detailList);
-                                    userAssessmentService.saveUserAssessment(userAssessment);
-                                    Map result = userAssessmentService.calculateResult(userAssessment.getUser_id(), userAssessment.getAssessment_id());
-                                    int totalMcqMarks = Integer.parseInt(result.get("totalNoOfQuestion").toString());
-                                    int totalMcqScore = Integer.parseInt(result.get("correctQuestion").toString());
-                                    userAssessment.setTotal_no_of_questions(totalMcqMarks);
-                                    userAssessment.setCorrect_questions(totalMcqScore);
-                                    if (totalMcqScore != 0) {
-                                        DecimalFormat df = new DecimalFormat("#.00");
-                                        float mcqPercentage = Float.valueOf(df.format((totalMcqScore * 100) / (float) totalMcqMarks));
-                                        userAssessment.setMcqPercentage(mcqPercentage);
-                                        userAssessment.setTotalPercentage(mcqPercentage);
-                                    }
-                                    UserAssessment userAss = userAssessmentService.saveUserAssessment(userAssessment);
-                                    associateAnswerRepo.deleteByAssociateId(Long.parseLong(map.get("user_id").toString()));
-                                    //To Calculate topic wise scores
-                                    try {
-                                        List<LinkedCaseInsensitiveMap> assessments = new ArrayList<>();
-                                        LinkedCaseInsensitiveMap userIds = new LinkedCaseInsensitiveMap();
-                                        userIds.put("assessment_id", userAss.getAssessment_id());
-                                        userIds.put("user_assessment_id", userAss.getUser_assessment_id());
-                                        userIds.put("total_questions", userAss.getTotal_no_of_questions());
-                                        assessments.add(userIds);
-                                        new Thread(() -> {
-                                            long userId = userAss.getUser_id();
-                                            List<LinkedCaseInsensitiveMap> topicWiseScore = assessmentCreationServiceImpl.getTopicWiseScoresForAssociates(userId, assessments);
-                                            if (topicWiseScore.size() > 0 && !topicWiseScore.isEmpty()) {
-                                                List<AssociateTopicScores> scores = new ArrayList<>();
-                                                for (LinkedCaseInsensitiveMap assess : topicWiseScore) {
-                                                    List<LinkedCaseInsensitiveMap> topicScore = (List<LinkedCaseInsensitiveMap>) assess.get("topicWiseScore");
-                                                    for (LinkedCaseInsensitiveMap topic : topicScore) {
-                                                        scores.add(new AssociateTopicScores(userId, Long.parseLong(assess.get("assessmentId").toString()), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
-                                                    }
-                                                }
-                                                topicScoresService.saveAll(scores);
+                    Boolean withinLimit = userAssessmentService.sendEmailWhenLimitExceed(orgId);
+                    if (withinLimit) {
+                        boolean assessmentSubmit = assessment.getAssessmentTimeBound().equalsIgnoreCase("assessmentTime");
+                        AssociateValidate av = new AssociateValidate(user_id, assessment_id, user_id, assessmentSubmit);
+                        associateValidtaeRepo.save(av);
+                        if (assessmentSubmit) {
+                            long timerInMiliSec = ((assessment.getTime() + 1) * 60 * 1000);
+                            Timer timer = new Timer("Assessment_Timer_For_" + user_id + "+" + assessment_id);
+                            final Long userId = user_id;
+                            final Long assessmentId = assessment_id;
+                            final Date startTime = new Date();
+                            TimerTask task = new TimerTask() {
+                                @Override
+                                public void run() {
+                                    List<LinkedCaseInsensitiveMap> list = assessmentCreationService.getUserAssessmentByUserAssessmentId(userId, assessmentId);
+                                    if ((list == null) || (list.isEmpty())) {
+                                        UserAssessment userAssessment = new UserAssessment();
+                                        Set<UserAssessmentDetails> detailList = new HashSet<>();
+                                        Set<QuestionMaster> questionList = assessment.getQuestion_list();
+                                        userAssessment.setUser_id(Long.parseLong(map.get("user_id").toString()));
+                                        userAssessment.setAssessment_id(assessment.getAssessment_id());
+                                        userAssessment.setStartTime(startTime);
+                                        userAssessment.setEndTime(new Date());
+                                        userAssessment.setCreatedBy(userId.toString());
+                                        userAssessment.setLastModifiedBy(userId.toString());
+                                        userAssessment.setRemarks("By Backend(Associates) -> Timer run out start at." + startTime + " and end at" + new Date());
+                                        List<LinkedCaseInsensitiveMap> selectedQuestions = associateAnswerRepo.findByAssociateIdAndAssessmentId(userId, assessmentId);
+                                        questionList.stream().forEach(question -> {
+                                            Optional<LinkedCaseInsensitiveMap> present = selectedQuestions.stream().filter(sq -> sq.get("questionId").toString().equalsIgnoreCase(question.getQuestion_id().toString())).findFirst();
+                                            UserAssessmentDetails details = new UserAssessmentDetails();
+                                            details.setUserAssessment(userAssessment);
+                                            details.setQuestion_id(question.getQuestion_id());
+                                            if (present.isPresent()) {
+                                                String answer = present.get().get("answer").toString();
+                                                details.setAnswer(answer);
+                                            } else {
+                                                details.setAnswer("");
                                             }
-                                        }).start();
-                                    } catch (Exception ex) {
-                                        logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex);
+                                            detailList.add(details);
+                                        });
+                                        userAssessment.setDetail_list(detailList);
+                                        userAssessmentService.saveUserAssessment(userAssessment);
+                                        Map result = userAssessmentService.calculateResult(userAssessment.getUser_id(), userAssessment.getAssessment_id());
+                                        int totalMcqMarks = Integer.parseInt(result.get("totalNoOfQuestion").toString());
+                                        int totalMcqScore = Integer.parseInt(result.get("correctQuestion").toString());
+                                        userAssessment.setTotal_no_of_questions(totalMcqMarks);
+                                        userAssessment.setCorrect_questions(totalMcqScore);
+                                        if (totalMcqScore != 0) {
+                                            DecimalFormat df = new DecimalFormat("#.00");
+                                            float mcqPercentage = Float.valueOf(df.format((totalMcqScore * 100) / (float) totalMcqMarks));
+                                            userAssessment.setMcqPercentage(mcqPercentage);
+                                            userAssessment.setTotalPercentage(mcqPercentage);
+                                        }
+                                        UserAssessment userAss = userAssessmentService.saveUserAssessment(userAssessment);
+                                        associateAnswerRepo.deleteByAssociateId(Long.parseLong(map.get("user_id").toString()));
+                                        //To Calculate topic wise scores
+                                        try {
+                                            List<LinkedCaseInsensitiveMap> assessments = new ArrayList<>();
+                                            LinkedCaseInsensitiveMap userIds = new LinkedCaseInsensitiveMap();
+                                            userIds.put("assessment_id", userAss.getAssessment_id());
+                                            userIds.put("user_assessment_id", userAss.getUser_assessment_id());
+                                            userIds.put("total_questions", userAss.getTotal_no_of_questions());
+                                            assessments.add(userIds);
+                                            LinkedCaseInsensitiveMap topicWiseScores = assessmentCreationService.getTopicWiseScoresForAssociates(userIds);
+                                            List<AssociateTopicScores> scores = new ArrayList<>();
+                                            if (topicWiseScores != null) {
+                                                if (topicWiseScores.containsKey("topicWiseScore") && topicWiseScores.get("topicWiseScore") != null) {
+                                                    List<LinkedCaseInsensitiveMap> topicScores = (List<LinkedCaseInsensitiveMap>) topicWiseScores.get("topicWiseScore");
+                                                    for (LinkedCaseInsensitiveMap topic : topicScores) {
+                                                        scores.add(new AssociateTopicScores(Long.parseLong(map.get("user_id").toString()), userAss.getAssessment_id(), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
+                                                    }
+                                                    topicScoresService.saveAll(scores);
+                                                }
+                                            }
+//                                            new Thread(() -> {
+//                                                long userId = userAss.getUser_id();
+//                                                List<LinkedCaseInsensitiveMap> topicWiseScore = assessmentCreationServiceImpl.getTopicWiseScoresForAssociates(userId, assessments);
+//                                                if (topicWiseScore.size() > 0 && !topicWiseScore.isEmpty()) {
+//                                                    List<AssociateTopicScores> scores = new ArrayList<>();
+//                                                    for (LinkedCaseInsensitiveMap assess : topicWiseScore) {
+//                                                        List<LinkedCaseInsensitiveMap> topicScore = (List<LinkedCaseInsensitiveMap>) assess.get("topicWiseScore");
+//                                                        for (LinkedCaseInsensitiveMap topic : topicScore) {
+//                                                            scores.add(new AssociateTopicScores(userId, Long.parseLong(assess.get("assessmentId").toString()), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
+//                                                        }
+//                                                    }
+//                                                    topicScoresService.saveAll(scores);
+//                                                }
+//                                            }).start();
+                                        } catch (Exception ex) {
+                                            logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex.getMessage());
+                                        }
                                     }
+                                    timer.cancel();
                                 }
-                                timer.cancel();
-                            }
-                        };
-                        timer.schedule(task, timerInMiliSec);
+                            };
+                            timer.schedule(task, timerInMiliSec);
+                            resultMap.put("status", "success");
+                        }
+                    } else {
+                        resultMap.put("status", "countExceed");
+                        resultMap.put("msg", "Oops!!! Something went wrong.. Please contact to administrator.");
+
                     }
                 }
             }
-            resultMap.put("status", "success");
+
         } catch (Exception ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
             logger.error("Problem in setTimer() :: While saving topic wise scores => " + ex);
         }
+        logger.info("AssessmentCreationController -> list() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @PostMapping(path = "/save", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
-    public Map saveAssessment(@RequestBody String data) {
+    public Map saveUserAssessment(@RequestBody String data
+    ) {
+        logger.info("AssessmentCreationController -> saveUserAssessment() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -632,25 +712,36 @@ public class AssessmentCreationController {
                     //To Calculate topic wise scores
                     try {
                         List<LinkedCaseInsensitiveMap> assessments = new ArrayList<>();
-                        LinkedCaseInsensitiveMap userIds = new LinkedCaseInsensitiveMap();
-                        userIds.put("assessment_id", userAss.getAssessment_id());
-                        userIds.put("user_assessment_id", userAss.getUser_assessment_id());
-                        userIds.put("total_questions", userAss.getTotal_no_of_questions());
-                        assessments.add(userIds);
-                        new Thread(() -> {
-                            long userId = userAss.getUser_id();
-                            List<LinkedCaseInsensitiveMap> topicWiseScore = assessmentCreationServiceImpl.getTopicWiseScoresForAssociates(userId, assessments);
-                            if (topicWiseScore.size() > 0 && !topicWiseScore.isEmpty()) {
-                                List<AssociateTopicScores> scores = new ArrayList<>();
-                                for (LinkedCaseInsensitiveMap assess : topicWiseScore) {
-                                    List<LinkedCaseInsensitiveMap> topicScore = (List<LinkedCaseInsensitiveMap>) assess.get("topicWiseScore");
-                                    for (LinkedCaseInsensitiveMap topic : topicScore) {
-                                        scores.add(new AssociateTopicScores(userId, Long.parseLong(assess.get("assessmentId").toString()), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
-                                    }
+                        LinkedCaseInsensitiveMap userAssessments = new LinkedCaseInsensitiveMap();
+                        userAssessments.put("assessment_id", userAss.getAssessment_id());
+                        userAssessments.put("user_assessment_id", userAss.getUser_assessment_id());
+                        userAssessments.put("total_questions", userAss.getTotal_no_of_questions());
+                        assessments.add(userAssessments);
+                        LinkedCaseInsensitiveMap topicWiseScores = assessmentCreationService.getTopicWiseScoresForAssociates(userAssessments);
+                        List<AssociateTopicScores> scores = new ArrayList<>();
+                        if (topicWiseScores != null) {
+                            if (topicWiseScores.containsKey("topicWiseScore") && topicWiseScores.get("topicWiseScore") != null) {
+                                List<LinkedCaseInsensitiveMap> topicScores = (List<LinkedCaseInsensitiveMap>) topicWiseScores.get("topicWiseScore");
+                                for (LinkedCaseInsensitiveMap topic : topicScores) {
+                                    scores.add(new AssociateTopicScores(Long.parseLong(map.get("user_id").toString()), userAss.getAssessment_id(), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
                                 }
                                 topicScoresService.saveAll(scores);
                             }
-                        }).start();
+                        }
+//                        new Thread(() -> {
+//                            long userId = userAss.getUser_id();
+//                            LinkedCaseInsensitiveMap topicWiseScore = assessmentCreationService.getTopicWiseScoresForAssociates(userAssessments);
+//                            if (topicWiseScore 0 && !topicWiseScore.isEmpty()) {
+//                                List<AssociateTopicScores> scores = new ArrayList<>();
+//                                for (LinkedCaseInsensitiveMap assess : topicWiseScore) {
+//                                    List<LinkedCaseInsensitiveMap> topicScore = (List<LinkedCaseInsensitiveMap>) assess.get("topicWiseScore");
+//                                    for (LinkedCaseInsensitiveMap topic : topicScore) {
+//                                        scores.add(new AssociateTopicScores(userId, Long.parseLong(assess.get("assessmentId").toString()), topic.get("topicName").toString(), Float.parseFloat(topic.get("average").toString())));
+//                                    }
+//                                }
+//                                topicScoresService.saveAll(scores);
+//                            }
+//                        }).start();
                     } catch (Exception ex) {
                         logger.error("Problem in saveAssessment() :: While saving topic wise scores => " + ex);
                     }
@@ -700,33 +791,45 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> saveAssessment() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> list() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @PostMapping(path = "/stdntquiz")
     public Map getQuiz(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> getQuiz() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
-            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()));
+            logger.info("AssessmentCreationController --> getQuiz() :: map data" + map);
+//            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), Long.parseLong(map.get("jobportal_id").toString()), Long.parseLong(map.get("organizationId").toString()));
+            resultMap = assessmentCreationService.getQuiz(Long.parseLong(map.get("id").toString()), map.get("jobportal_id") != null ? Long.parseLong(map.get("jobportal_id").toString()) : null, Long.parseLong(map.get("organizationId").toString()), map.get("assessmentId") != null ? Long.parseLong(map.get("assessmentId").toString()) : null);
         } catch (IOException ex) {
             resultMap.clear();
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> getQuiz() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> getQuiz () :: Method completed successfully. With response date : " + resultMap);
         return resultMap;
     }
 
     @PostMapping(path = "/stdntresult", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
-    public Map saveAssessment(@RequestBody String data, HttpServletRequest request) {
+    public Map saveAssessment(@RequestBody String data, HttpServletRequest request
+    ) {
+        logger.info("AssessmentCreationController -> saveAssessment() :: Method started successfully.");
         Map resultMap = new HashMap<>();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
             map.put("accessToken", request.getHeader("Authorization"));
-            Map assessmentData = ((map.containsKey("assessment") && map.get("assessment") != null) ? (Map) map.get("assessment") : null);
-            if (assessmentData != null) {
+            Long assessmentId = ((map.containsKey("assessmentId") && map.get("assessmentId") != null) ? Long.parseLong(map.get("assessmentId").toString()) : 0);
+            if (assessmentId > 0) {
+                assessmentCreationService.saveStudentFeedBack(map);
+                CompletableFuture<LinkedCaseInsensitiveMap> assessmentData = assessmentCreationService.saveAssessment(map);
+                resultMap.put("correct_questions", assessmentData.get().get("correct_questions"));
+                resultMap.put("total_questions", assessmentData.get().get("total_questions"));
+                resultMap.put("topicScores", assessmentData.get().get("topicScores"));
                 resultMap.put("status", "success");
-                assessmentCreationService.saveAssessment(map);
 
             } else {
                 resultMap.put("msg", "Nothing to save.");
@@ -734,12 +837,20 @@ public class AssessmentCreationController {
             }
         } catch (IOException ex) {
             logger.error("Problem in AssessmentCreationController -> saveAssessment() :: ", ex);
+        } catch (InterruptedException ex) {
+            java.util.logging.Logger.getLogger(AssessmentCreationController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ExecutionException ex) {
+            java.util.logging.Logger.getLogger(AssessmentCreationController.class.getName()).log(Level.SEVERE, null, ex);
         }
+        logger.info("AssessmentCreationController -> saveAssessment() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
     @PostMapping(path = "/delete", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
-    public Map delete(@RequestBody String data) {
+    public Map delete(@RequestBody String data
+    ) {
+        logger.info("AssessmentCreationController -> delete() :: Method started successfully.");
         Map resultMap = new HashMap();
         try {
             Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
@@ -757,7 +868,132 @@ public class AssessmentCreationController {
             resultMap.put("status", "exception");
             logger.error("Problem in AssessmentCreationController -> delete() :: ", ex);
         }
+        logger.info("AssessmentCreationController -> delete() :: Method completed successfully. With response date : " + resultMap);
+
         return resultMap;
     }
 
+    @PostMapping(path = "/save_ans_details")
+    public void saveAnswerDetails(@RequestBody String data
+    ) {
+        logger.info("AssessmentCreationController -> saveAnswerDetails() :: Method started successfully.");
+        Map resultMap = new HashMap();
+        try {
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            assessmentCreationService.saveAnswerDetails(map);
+        } catch (Exception ex) {
+            resultMap.clear();
+            resultMap.put("status", "exception");
+            logger.error("Problem in AssessmentCreationController -> saveAnswerDetails() :: ", ex);
+        }
+        logger.info("AssessmentCreationController -> saveAnswerDetails() :: Method completed successfully. With response date : " + resultMap);
+
+    }
+
+    // this api is meant to get completed assessment counts of candidate and associate both
+    @PostMapping(path = "/completedcount", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public Map getCompletedAssessmentCount(@RequestBody String data
+    ) {
+        logger.info("AssessmentCreationController -> getCompletedAssessmentCount() :: Method started successfully.");
+        Map resultMap = new HashMap();
+        try {
+            String orgId = mapper.readValue(EncryptDecryptUtils.decrypt(data), String.class);
+            if (orgId == null || orgId == "") {
+                resultMap.put("error", "Please provide organization id!!!");
+            } else {
+                resultMap = associateValidtaeRepo.getCompletedAssessments(Long.parseLong(orgId));
+            }
+        } catch (Exception ex) {
+            resultMap.clear();
+            ex.printStackTrace();
+            resultMap.put("status", "exception");
+            logger.error("Problem in AssessmentCreationController -> delete() :: ", ex);
+        }
+        logger.info("AssessmentCreationController -> getCompletedAssessmentCount() :: Method completed successfully. With response date : " + resultMap);
+
+        return resultMap;
+    }
+
+    @PostMapping(path = "/associatetopicscore")
+    public Map getAssociateTopicScores(@RequestBody String data) {
+        logger.info("AssessmentCreationController -> getAssociateTopicScores() :: Method started successfully.");
+        Map resultMap = new HashMap();
+        try {
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            resultMap = assessmentCreationService.getAssociateTopicScores(map);
+        } catch (Exception ex) {
+            resultMap.clear();
+            resultMap.put("status", "exception");
+            logger.error("Problem in AssessmentCreationController -> getAssociateTopicScores() :: ", ex);
+        }
+        logger.info("AssessmentCreationController -> getAssociateTopicScores() :: Method completed successfully. With response date : " + resultMap);
+
+        return resultMap;
+    }
+
+    @ApiOperation(value = "save text assessment", response = StudentAssessmentControllerPayload.class)
+    @PostMapping(path = "/savetext", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public Map saveTextAssessment(@RequestBody String data) {
+        Map resultMap = new HashMap<>();
+        try {
+            logger.info("StudentAssessmentController -> saveTextAssessment() ::  Method execution start");
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("StudentAssessmentController -> saveTextAssessment() ::  Method execution start with request data : " + map);
+            Map assessmentData = ((map.containsKey("assessment") && map.get("assessment") != null) ? (Map) map.get("assessment") : null);
+            if (assessmentData != null) {
+                resultMap = assessmentCreationService.saveTextAssessment(map);
+            } else {
+                resultMap.put("msg", "Nothing to save.");
+                resultMap.put("status", "error");
+            }
+        } catch (IOException ex) {
+            logger.error("Problem in StudentAssessmentController -> saveTextAssessment() :: ", ex);
+        }
+        logger.info("StudentAssessmentController -> saveTextAssessment() ::  Method execution complete with response data :: " + resultMap);
+
+        return resultMap;
+    }
+
+    @ApiOperation(value = "get text answer", response = StudentAssessmentControllerPayload.class)
+    @PostMapping(path = "/gettext", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public Map getTextAnswer(@RequestBody String data) {
+        logger.info("StudentAssessmentController -> getTextAnswer() ::  Method execution start");
+        Map resultMap = new HashMap<>();
+        try {
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("StudentAssessmentController -> getTextAnswer() :: request data :: " + map);
+            if (map.containsKey("assessment_id") && map.get("assessment_id") != null) {
+                resultMap = assessmentCreationService.getTextAnswer(map);
+            } else {
+                resultMap.put("msg", "Nothing to save.");
+                resultMap.put("status", "error");
+                logger.info("StudentAssessmentController -> getTextAnswer() ::  Nothing to save");
+
+            }
+        } catch (IOException ex) {
+            logger.error("Problem in StudentAssessmentController -> getTextAnswer() :: ", ex);
+        }
+        logger.info("StudentAssessmentController -> getTextAnswer() ::  Response data :: " + resultMap);
+        logger.info("StudentAssessmentController -> getTextAnswer() ::  Method execution completed");
+
+        return resultMap;
+    }
+
+    @ApiOperation(value = "get result", response = StudentAssessmentControllerPayload.class)
+    @PostMapping(path = "/getresult", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+    public Map findResult(@RequestBody String data) {
+        Map resultMap = new HashMap();
+        try {
+            Map map = mapper.readValue(EncryptDecryptUtils.decrypt(data), LinkedCaseInsensitiveMap.class);
+            logger.info("AssessmentCreationController -> findResult() ::  Method execution start with request data : " + map);
+            resultMap = assessmentCreationService.getResultByUserId(map);
+        } catch (IOException ex) {
+            logger.error("Problem in AssessmentCreationController -> findResult() :: ", ex);
+            resultMap.clear();
+            resultMap.put("status", "exception");
+            logger.error("AssessmentCreationController -> findResult() :: Exception Occured !! ", ex);
+        }
+        logger.info("AssessmentCreationController -> findResult() ::  Method execution complete with response data : " + resultMap);
+        return resultMap;
+    }
 }

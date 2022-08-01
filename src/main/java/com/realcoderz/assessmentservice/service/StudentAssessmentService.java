@@ -17,5 +17,7 @@ public interface StudentAssessmentService {
 
     public Map getTopicScores(LinkedCaseInsensitiveMap assess);
 
+    public void sonarScannerInterval();
+
 
 }

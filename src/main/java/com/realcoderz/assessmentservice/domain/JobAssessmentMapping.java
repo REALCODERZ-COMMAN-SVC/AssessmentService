@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.EqualsAndHashCode;
+
 
 /**
  *
@@ -23,6 +26,7 @@ import org.hibernate.annotations.Parameter;
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class JobAssessmentMapping extends Auditable<String> implements Serializable {
 
     @Id

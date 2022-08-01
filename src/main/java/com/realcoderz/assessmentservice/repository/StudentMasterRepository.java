@@ -465,4 +465,14 @@ public interface StudentMasterRepository extends JpaRepository<StudentMaster, Lo
 
     @Query(nativeQuery = true, value = "select count(aq.question_id) as topicCount from assessment_question aq , question_master qm,language_master lm where qm.question_id=aq.question_id and qm.language_id=lm.language_id and lm.language_name=:languageName and qm.question_type_id=1 and aq.assessment_id=:assessmentId")
     public Integer findTotalQuestion(@Param("assessmentId") Long assessmentId, @Param("languageName") String topicName);
+
+    @Query("Select student_id  from StudentMaster where lower(email_id)=lower(:email_id) AND organizationId=:organizationId")
+    public Long findByEmailAndOrgId(@Param("email_id") String email_id, @Param("organizationId") Long organizationId);
+
+    @Query(nativeQuery = true, value = "select sm.first_name as first_name,sm.student_id as student_id, sm.last_name as last_name , sm.profile_path as imageUrl from student_master sm inner join student_assessment sa on sa.student_assessment_id=(select sa.student_assessment_id from student_assessment sa where (sa.student_id=sm.student_id and sa.assessment_id =:assessmentId and sa.direct_ass =1) order by sa.student_assessment_id desc limit 0,1) where sm.organization_id =:organizationId")
+    public List<LinkedCaseInsensitiveMap> getCandidateByAssId(@Param("assessmentId") Long assessmentId, @Param("organizationId") Long organizationId);
+
+    @Query(nativeQuery = true, value = "Select sa.assessment_id as assessment_id,qm.question_type_id as  question_type_id , (CASE When qom.option_desc is null then 'N' ELSE 'Y' END)  as answer, qm.question_id as question_id , tm.topic_name as topic_name from  student_assessment sa inner join  student_assessment_details sad on sad.student_assessment_id=sa.student_assessment_id left join question_master qm on qm.question_id=sad.question_id left join topic_master tm on tm.topic_id=qm.topic_id left join question_option_mapping qom on qom.option_id=sad.answer and qom.is_active='Y'  Where  sa.student_assessment_id=:student_assessment_id")
+    public List<LinkedCaseInsensitiveMap> stdntQuestionStatus(@Param("student_assessment_id") Long student_assessment_id);
+
 }

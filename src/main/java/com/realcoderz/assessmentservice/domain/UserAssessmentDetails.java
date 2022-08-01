@@ -10,12 +10,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -25,6 +26,7 @@ import org.hibernate.annotations.Parameter;
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class UserAssessmentDetails extends Auditable<String> implements Serializable {
 
     @Id
@@ -43,6 +45,7 @@ public class UserAssessmentDetails extends Auditable<String> implements Serializ
     private Long question_id;
     private String answer;
     @ManyToOne
+    @EqualsAndHashCode.Exclude
     private UserAssessment userAssessment;
 
 }

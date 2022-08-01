@@ -17,9 +17,10 @@ import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -30,7 +31,6 @@ import org.hibernate.annotations.Parameter;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
 public class QuestionOptionMapping extends Auditable<String> implements Serializable {
 
     @Id
@@ -49,6 +49,7 @@ public class QuestionOptionMapping extends Auditable<String> implements Serializ
     @NotNull(message = "Active status can't be empty")
     private Character isActive;
     @ManyToOne
+    @EqualsAndHashCode.Exclude
     private QuestionMaster questionMaster;
 
     public QuestionOptionMapping(Long option_id, String option_desc, Character isActive, QuestionMaster questionMaster) {

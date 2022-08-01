@@ -7,6 +7,7 @@ package com.realcoderz.assessmentservice.domain;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.realcoderz.assessmentservice.auditable.Auditable;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
@@ -18,6 +19,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,6 +37,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class BatchMaster extends Auditable<String> implements Serializable {
 
     @Id
@@ -86,6 +89,7 @@ public class BatchMaster extends Auditable<String> implements Serializable {
 
     @OneToMany
     @JoinColumn(name = "batch_id")
+    @EqualsAndHashCode.Exclude
     private Set<UserMaster> associates;
 
     public BatchMaster(Long batch_id, String learning_journey, String batch_desc, Date batch_start_date, Integer selected_no_of_weeks, Date batch_end_date, Long language_id, Character active, Long learningJourneyId) {

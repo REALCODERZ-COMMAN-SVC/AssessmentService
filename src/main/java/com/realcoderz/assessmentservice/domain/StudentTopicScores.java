@@ -14,6 +14,8 @@ import javax.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.realcoderz.assessmentservice.auditable.Auditable;
+import lombok.EqualsAndHashCode;
 
 /**
  *
@@ -23,6 +25,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class StudentTopicScores extends Auditable<String> implements Serializable {
 
     @Id
